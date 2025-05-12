@@ -36,12 +36,21 @@ function initLoginPage() {
 
       const username = document.getElementById("username").value;
       const password = document.getElementById("password").value;
-
+      const loginButton = loginForm.querySelector("button[type='submit']");
+      
+      // Show loading state
+      loginButton.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Logging in...';
+      loginButton.disabled = true;
+      
       try {
         await login(username, password);
         window.location.href = "/public/index.html";
       } catch (error) {
-        showError(error.message);
+        showError(error.message || "Login failed. Please check your credentials and try again.");
+        
+        // Reset button state
+        loginButton.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+        loginButton.disabled = false;
       }
     });
   }
@@ -52,9 +61,18 @@ async function initProfilePage() {
   const appContainer = document.getElementById("app");
 
   if (appContainer) {
-    const loader = showLoading(appContainer);
+    // Show initial loading state
+    appContainer.innerHTML = `
+      <div class="initial-loading">
+        <i class="fas fa-circle-notch fa-spin fa-3x"></i>
+        <p>Loading your profile...</p>
+      </div>
+    `;
 
     try {
+      // Clear loading indicator
+      appContainer.innerHTML = '';
+      
       // Render profile sections
       const profileSection = await renderProfile();
       if (profileSection) {
@@ -67,9 +85,16 @@ async function initProfilePage() {
         appContainer.appendChild(statsSection);
       }
     } catch (error) {
-      showError(error.message);
-    } finally {
-      hideLoading(loader);
+      appContainer.innerHTML = '';
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'error-container';
+      errorDiv.innerHTML = `
+        <i class="fas fa-exclamation-circle"></i>
+        <h2>Error Loading Profile</h2>
+        <p>${error.message || 'Failed to load profile data. Please try again later.'}</p>
+        <button onclick="window.location.reload()">Retry</button>
+      `;
+      appContainer.appendChild(errorDiv);
     }
   }
 }
