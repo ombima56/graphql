@@ -15,15 +15,45 @@ async function sendQuery(query, variables = {}) {
             })
         });
 
+        // Check if the response is ok
+        if (!response.ok) {
+            if (response.status === 401) {
+                // Token expired or invalid
+                localStorage.removeItem('jwt');
+                window.location.href = '/public/login.html';
+                throw new Error('Your session has expired. Please log in again.');
+            } else {
+                throw new Error(`Server error (${response.status}). Please try again later.`);
+            }
+        }
+
         const data = await response.json();
         
         if (data.errors) {
-            throw new Error(data.errors[0].message);
+            console.error('GraphQL errors:', data.errors);
+            throw new Error(data.errors[0].message || 'Error fetching data from server');
         }
         
         return data.data;
     } catch (error) {
         console.error('GraphQL query error:', error);
+        
+        // Handle network errors
+        if (error.name === 'TypeError' && error.message.includes('NetworkError')) {
+            throw new Error('Network error. Please check your internet connection and try again.');
+        }
+        
+        // Handle CORS errors
+        if (error.message.includes('CORS') || error.message.includes('Cross-Origin')) {
+            throw new Error('Cross-origin request failed. This might be a temporary issue with the server.');
+        }
+        
+        // Handle timeout errors
+        if (error.name === 'TimeoutError' || error.message.includes('timeout')) {
+            throw new Error('Request timed out. The server might be experiencing high load.');
+        }
+        
+        // Re-throw the error to be handled by the caller
         throw error;
     }
 }
