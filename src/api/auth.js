@@ -4,7 +4,7 @@ async function login(usernameOrEmail, password) {
         // Create Basic auth header
         const credentials = btoa(`${usernameOrEmail}:${password}`);
         
-        const response = await fetch('https://https://learn.zone01kisumu.ke/api/auth/signin', {
+        const response = await fetch('https://learn.zone01kisumu.ke/api/auth/signin', {
             method: 'POST',
             headers: {
                 'Authorization': `Basic ${credentials}`
