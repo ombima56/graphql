@@ -64,6 +64,71 @@ async function renderProfile() {
         `;
         profileContainer.appendChild(auditInfo);
         
+        // Section 4: Recent Activity
+        const recentActivity = document.createElement('div');
+        recentActivity.className = 'profile-section';
+        
+        const activityTitle = document.createElement('h2');
+        activityTitle.innerHTML = '<i class="fas fa-history"></i> Recent Activity';
+        recentActivity.appendChild(activityTitle);
+        
+        // Get the 5 most recent transactions
+        const recentTransactions = [...user.transactions]
+            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+            .slice(0, 5);
+            
+        if (recentTransactions.length > 0) {
+            const activityList = document.createElement('ul');
+            activityList.className = 'activity-list';
+            
+            recentTransactions.forEach(transaction => {
+                const item = document.createElement('li');
+                const date = new Date(transaction.createdAt).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+                
+                let icon, description;
+                switch(transaction.type) {
+                    case 'xp':
+                        icon = '<i class="fas fa-star"></i>';
+                        description = `Earned ${formatNumber(transaction.amount)} XP`;
+                        break;
+                    case 'up':
+                        icon = '<i class="fas fa-arrow-up"></i>';
+                        description = `Received ${formatNumber(transaction.amount)} audit points`;
+                        break;
+                    case 'down':
+                        icon = '<i class="fas fa-arrow-down"></i>';
+                        description = `Gave ${formatNumber(transaction.amount)} audit points`;
+                        break;
+                    default:
+                        icon = '<i class="fas fa-circle"></i>';
+                        description = `${transaction.type} transaction of ${formatNumber(transaction.amount)}`;
+                }
+                
+                item.innerHTML = `
+                    <div class="activity-icon">${icon}</div>
+                    <div class="activity-details">
+                        <div class="activity-description">${description}</div>
+                        <div class="activity-path">${transaction.path || 'N/A'}</div>
+                        <div class="activity-date">${date}</div>
+                    </div>
+                `;
+                
+                activityList.appendChild(item);
+            });
+            
+            recentActivity.appendChild(activityList);
+        } else {
+            const noActivity = document.createElement('p');
+            noActivity.textContent = 'No recent activity found.';
+            recentActivity.appendChild(noActivity);
+        }
+        
+        profileContainer.appendChild(recentActivity);
+        
         return profileContainer;
     } catch (error) {
         showError(error.message);
