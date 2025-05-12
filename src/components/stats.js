@@ -17,7 +17,7 @@ async function renderStats() {
     statsContainer.className = "profile-section";
 
     const title = document.createElement("h2");
-    title.textContent = "Graphical Statistics";
+    title.innerHTML = '<i class="fas fa-chart-line"></i> Graphical Statistics';
     statsContainer.appendChild(title);
 
     const graphsContainer = document.createElement("div");
@@ -46,9 +46,22 @@ async function renderStats() {
     const auditChartData = processAuditData(auditData.user.audits);
     const auditChart = createPieChart(auditChartData, "Audit Types", 250, 250);
     auditGraphContainer.appendChild(auditChart);
+    
+    // Add a third graph - XP by Project Type
+    const projectXpContainer = document.createElement("div");
+    projectXpContainer.className = "graph-container";
+    
+    const projectXpTitle = document.createElement("h3");
+    projectXpTitle.textContent = "XP by Project Category";
+    projectXpContainer.appendChild(projectXpTitle);
+    
+    const projectXpData = processProjectXPData(xpData.user.transactions);
+    const projectXpChart = createPieChart(projectXpData, "Project Categories", 250, 250);
+    projectXpContainer.appendChild(projectXpChart);
 
     graphsContainer.appendChild(xpGraphContainer);
     graphsContainer.appendChild(auditGraphContainer);
+    graphsContainer.appendChild(projectXpContainer);
     statsContainer.appendChild(graphsContainer);
 
     return statsContainer;
@@ -90,6 +103,38 @@ function processAuditData(audits) {
     { label: "Received", value: upAudits },
     { label: "Given", value: downAudits },
   ];
+}
+
+// Process XP data by project category
+function processProjectXPData(transactions) {
+  // Extract project category from path
+  const xpByCategory = {};
+  
+  transactions.forEach(t => {
+    if (t.type === 'xp' && t.path) {
+      // Extract category from path (e.g., /div-01/graphql -> div-01)
+      const pathParts = t.path.split('/');
+      let category = 'Other';
+      
+      if (pathParts.length >= 2) {
+        category = pathParts[1];
+      }
+      
+      if (!xpByCategory[category]) {
+        xpByCategory[category] = 0;
+      }
+      
+      xpByCategory[category] += t.amount;
+    }
+  });
+  
+  // Convert to array format for chart
+  return Object.entries(xpByCategory)
+    .filter(([_, value]) => value > 0)
+    .map(([label, value]) => ({
+      label,
+      value
+    }));
 }
 
 export { renderStats };
