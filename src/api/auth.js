@@ -12,16 +12,32 @@ async function login(usernameOrEmail, password) {
         });
 
         if (!response.ok) {
-            throw new Error('Invalid credentials. Please try again.');
+            if (response.status === 401) {
+                throw new Error('Invalid username or password. Please try again.');
+            } else if (response.status === 429) {
+                throw new Error('Too many login attempts. Please try again later.');
+            } else {
+                throw new Error(`Server error (${response.status}). Please try again later.`);
+            }
         }
 
         const data = await response.json();
+        
+        if (!data) {
+            throw new Error('Invalid response from server. Please try again.');
+        }
         
         // Store JWT token in localStorage
         localStorage.setItem('jwt', data);
         return true;
     } catch (error) {
         console.error('Login error:', error);
+        
+        // Handle network errors
+        if (error.name === 'TypeError' && error.message.includes('NetworkError')) {
+            throw new Error('Network error. Please check your internet connection and try again.');
+        }
+        
         throw error;
     }
 }
