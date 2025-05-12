@@ -6,6 +6,11 @@ import { showError } from './ui.js';
 async function renderProfile() {
     try {
         const data = await getUserProfile();
+        
+        if (!data || !data.user) {
+            throw new Error('Failed to load profile data. Please try again later.');
+        }
+        
         const user = data.user;
         
         const profileContainer = document.createElement('div');
@@ -131,8 +136,18 @@ async function renderProfile() {
         
         return profileContainer;
     } catch (error) {
-        showError(error.message);
-        return null;
+        console.error('Profile rendering error:', error);
+        
+        // Create an error message element
+        const errorContainer = document.createElement('div');
+        errorContainer.className = 'profile-section error-section';
+        errorContainer.innerHTML = `
+            <h2><i class="fas fa-exclamation-circle"></i> Error Loading Profile</h2>
+            <p>${error.message || 'An unexpected error occurred while loading your profile data.'}</p>
+            <button onclick="window.location.reload()">Retry</button>
+        `;
+        
+        return errorContainer;
     }
 }
 
