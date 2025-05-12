@@ -12,7 +12,11 @@ async function renderStats() {
     // Fetch data for graphs
     const xpData = await getUserXP();
     const auditData = await getUserAudits();
-
+    
+    if (!xpData || !xpData.user || !auditData || !auditData.user) {
+      throw new Error('Failed to load statistics data. Please try again later.');
+    }
+    
     const statsContainer = document.createElement("div");
     statsContainer.className = "profile-section";
 
@@ -66,8 +70,18 @@ async function renderStats() {
 
     return statsContainer;
   } catch (error) {
-    showError(error.message);
-    return null;
+    console.error('Stats rendering error:', error);
+    
+    // Create an error message element
+    const errorContainer = document.createElement('div');
+    errorContainer.className = 'profile-section error-section';
+    errorContainer.innerHTML = `
+        <h2><i class="fas fa-exclamation-circle"></i> Error Loading Statistics</h2>
+        <p>${error.message || 'An unexpected error occurred while loading your statistics data.'}</p>
+        <button onclick="window.location.reload()">Retry</button>
+    `;
+    
+    return errorContainer;
   }
 }
 
