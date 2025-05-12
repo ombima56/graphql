@@ -3,7 +3,7 @@ async function sendQuery(query, variables = {}) {
     const token = localStorage.getItem('jwt');
     
     try {
-        const response = await fetch('https://https://learn.zone01kisumu.ke/api/graphql-engine/v1/graphql', {
+        const response = await fetch('https://learn.zone01kisumu.ke/api/graphql-engine/v1/graphql', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
