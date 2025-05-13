@@ -67,3 +67,19 @@ graphql/
 
 - This application uses the GraphQL API at `https://01.gritlab.ax/api/graphql-engine/v1/graphql`
 - Authentication is handled through JWT tokens stored in localStorage
+
+## Hosting
+
+This project is hosted on Netlify. You can access it at:
+https://graphql-profile-viewer.netlify.app
+
+### How to Deploy Your Own Instance
+
+1. Fork this repository
+2. Sign up for a Netlify account at https://www.netlify.com/
+3. Create a new site from Git
+4. Connect to your GitHub/GitLab account
+5. Select the forked repository
+6. Deploy the site
+
+The `netlify.toml` file in the repository will handle the configuration automatically.
