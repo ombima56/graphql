@@ -246,13 +246,13 @@ button:disabled:hover {
 }
 
 .graph-container {
-    flex: 1;
-    min-width: 300px;
-    padding: 20px;
-    background: white;
+    background-color: white;
     border-radius: var(--border-radius);
+    padding: 20px;
     box-shadow: var(--shadow);
-    transition: transform 0.3s;
+    margin-bottom: 20px;
+    text-align: center;
+    transition: transform 0.3s ease;
 }
 
 .graph-container:hover {
@@ -260,9 +260,9 @@ button:disabled:hover {
 }
 
 .graph-container h3 {
-    text-align: center;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
     color: var(--dark-color);
+    font-weight: 600;
 }
 
 /* SVG styles */
@@ -274,6 +274,61 @@ svg {
 
 svg text {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Add tooltip styles for SVG elements */
+[data-tooltip] {
+    position: relative;
+    cursor: pointer;
+}
+
+[data-tooltip]:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 10;
+}
+
+/* Interactive chart elements */
+[data-is-bar="true"] {
+    transition: opacity 0.2s, stroke 0.2s, stroke-width 0.2s;
+    cursor: pointer;
+}
+
+#value-display {
+    transition: all 0.3s ease;
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.graph-container {
+    position: relative;
+}
+
+.graph-container::after {
+    content: "Click on bars to see details";
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 11px;
+    color: #666;
+    opacity: 0.8;
+    pointer-events: none;
+    transition: opacity 0.5s;
+}
+
+.graph-container:hover::after {
+    opacity: 0;
 }
 
 /* Loading indicator */
@@ -383,4 +438,61 @@ svg text {
 .error-container button {
     max-width: 200px;
     margin: 0 auto;
+}
+
+/* Project Categories styles */
+.categories-list {
+    list-style: none;
+    margin-top: 15px;
+}
+
+.categories-list li {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.categories-list li:last-child {
+    border-bottom: none;
+}
+
+.category-name {
+    width: 120px;
+    font-weight: 500;
+    color: var(--dark-color);
+}
+
+.category-bar {
+    flex: 1;
+    height: 12px;
+    background-color: #eee;
+    border-radius: 6px;
+    overflow: hidden;
+    margin: 0 15px;
+}
+
+.category-progress {
+    height: 100%;
+    border-radius: 6px;
+}
+
+.category-progress.high {
+    background-color: #4CAF50;
+}
+
+.category-progress.medium {
+    background-color: #2196F3;
+}
+
+.category-progress.low {
+    background-color: #FFC107;
+}
+
+.category-value {
+    width: 120px;
+    text-align: right;
+    font-size: 14px;
+    color: var(--dark-color);
 }
