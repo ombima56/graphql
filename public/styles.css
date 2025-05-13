@@ -270,6 +270,7 @@ svg {
     width: 100%;
     height: auto;
     overflow: visible;
+    filter: drop-shadow(0 2px 3px rgba(0,0,0,0.05));
 }
 
 svg text {
@@ -301,6 +302,7 @@ svg text {
 [data-is-bar="true"] {
     transition: opacity 0.2s, stroke 0.2s, stroke-width 0.2s;
     cursor: pointer;
+    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.1));
 }
 
 #value-display {
@@ -319,6 +321,24 @@ svg text {
 
 .graph-container {
     position: relative;
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.graph-container:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.graph-container h3 {
+    margin-bottom: 15px;
+    color: #2c3e50;
+    font-weight: 600;
 }
 
 .graph-container::after {
