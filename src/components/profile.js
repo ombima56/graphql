@@ -102,7 +102,7 @@ async function renderProfile() {
         progressInfo.className = 'profile-section';
         progressInfo.innerHTML = `
             <h2><i class="fas fa-trophy"></i> XP and Progress</h2>
-            <p><strong>Total XP:</strong> ${formatNumber(calculateTotalXP(safeUser.transactions))} XP</p>
+            <p><strong>Total XP:</strong> ${formatXP(calculateTotalXP(safeUser.transactions))} </p>
             <p><strong>Audit Ratio:</strong> ${safeUser.auditRatio.toFixed(1)}</p>
             <p><strong>Projects Completed:</strong> ${safeUser.progresses.length}</p>
         `;
@@ -113,8 +113,8 @@ async function renderProfile() {
         auditInfo.className = 'profile-section';
         auditInfo.innerHTML = `
             <h2><i class="fas fa-exchange-alt"></i> Audit Information</h2>
-            <p><strong>Total Received:</strong> ${formatNumber(safeUser.totalUp)} XP</p>
-            <p><strong>Total Given:</strong> ${formatNumber(safeUser.totalDown)} XP</p>
+            <p><strong>Total Received:</strong> ${formatXP(safeUser.totalUp)} </p>
+            <p><strong>Total Given:</strong> ${formatXP(safeUser.totalDown)} </p>
         `;
         profileContainer.appendChild(auditInfo);
         
@@ -147,19 +147,19 @@ async function renderProfile() {
                 switch(transaction.type) {
                     case 'xp':
                         icon = '<i class="fas fa-star"></i>';
-                        description = `Earned ${formatNumber(transaction.amount)} XP`;
+                        description = `Earned ${formatXP(transaction.amount)}`;
                         break;
                     case 'up':
                         icon = '<i class="fas fa-arrow-up"></i>';
-                        description = `Received ${formatNumber(transaction.amount)} audit points`;
+                        description = `Received ${formatXP(transaction.amount)}`;
                         break;
                     case 'down':
                         icon = '<i class="fas fa-arrow-down"></i>';
-                        description = `Gave ${formatNumber(transaction.amount)} audit points`;
+                        description = `Gave ${formatXP(transaction.amount)}`;
                         break;
                     default:
                         icon = '<i class="fas fa-circle"></i>';
-                        description = `${transaction.type} transaction of ${formatNumber(transaction.amount)}`;
+                        description = `${transaction.type} transaction of ${formatXP(transaction.amount)}`;
                 }
                 
                 item.innerHTML = `
@@ -216,4 +216,15 @@ function formatNumber(num) {
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
-export { renderProfile };
+// Helper function to format XP in KB and MB
+function formatXP(xp) {
+    if (xp >= 1000000) {
+        return `${(xp / 1000000).toFixed(2)} MB`;
+    } else if (xp >= 1000) {
+        return `${(xp / 1000).toFixed(1)} KB`;
+    } else {
+        return `${xp} B`;
+    }
+}
+
+export { renderProfile, formatXP };
