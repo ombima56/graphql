@@ -3,6 +3,7 @@ async function login(usernameOrEmail, password) {
     try {
         // Create Basic auth header
         const credentials = btoa(`${usernameOrEmail}:${password}`);
+        console.log('Attempting login for:', usernameOrEmail);
         
         const response = await fetch('https://learn.zone01kisumu.ke/api/auth/signin', {
             method: 'POST',
@@ -22,6 +23,7 @@ async function login(usernameOrEmail, password) {
         }
 
         const data = await response.json();
+        console.log('Login successful, received token');
         
         if (!data) {
             throw new Error('Invalid response from server. Please try again.');
@@ -29,6 +31,7 @@ async function login(usernameOrEmail, password) {
         
         // Store JWT token in localStorage
         localStorage.setItem('jwt', data);
+        console.log('JWT token stored in localStorage');
         return true;
     } catch (error) {
         console.error('Login error:', error);
