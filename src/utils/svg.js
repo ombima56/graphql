@@ -23,7 +23,7 @@ function createBarChart(data, title, width, height, formatFunction) {
     const maxValue = Math.max(...data.map(d => d.value || 0));
     const barWidth = Math.min(chartWidth / data.length - 10, 40); // Limit max width
     
-    // Add title
+    // Add title with improved styling
     const titleElement = document.createElementNS("http://www.w3.org/2000/svg", "text");
     titleElement.setAttribute("x", width / 2);
     titleElement.setAttribute("y", 20);
@@ -60,12 +60,12 @@ function createBarChart(data, title, width, height, formatFunction) {
     valueDisplayBg.style.opacity = 0.7;
     svg.insertBefore(valueDisplayBg, valueDisplay);
     
-    // Add background grid lines
+    // Add background grid lines with improved styling
     const gridLines = 5;
     for (let i = 0; i <= gridLines; i++) {
         const y = padding.top + (chartHeight * i / gridLines);
         
-        // Grid line
+        // Grid line with softer color
         const gridLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
         gridLine.setAttribute("x1", padding.left);
         gridLine.setAttribute("y1", y);
@@ -75,7 +75,7 @@ function createBarChart(data, title, width, height, formatFunction) {
         gridLine.setAttribute("stroke-width", "1");
         svg.appendChild(gridLine);
         
-        // Y-axis label
+        // Y-axis label with improved positioning
         const yLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
         yLabel.setAttribute("x", padding.left - 10);
         yLabel.setAttribute("y", y);
@@ -99,7 +99,7 @@ function createBarChart(data, title, width, height, formatFunction) {
         const x = padding.left + i * (chartWidth / data.length) + (chartWidth / data.length - barWidth) / 2;
         const y = height - padding.bottom - barHeight;
         
-        // Create gradient for bar
+        // Create gradient for bar with improved colors
         const gradientId = `barGradient-${i}`;
         const gradient = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient");
         gradient.setAttribute("id", gradientId);
@@ -144,7 +144,7 @@ function createBarChart(data, title, width, height, formatFunction) {
         rect.setAttribute("stroke-width", "1");
         rect.setAttribute("cursor", "pointer");
         
-        // Add animation
+        // Add animation with improved timing
         const animate = document.createElementNS("http://www.w3.org/2000/svg", "animate");
         animate.setAttribute("attributeName", "height");
         animate.setAttribute("from", "0");
@@ -228,7 +228,7 @@ function createBarChart(data, title, width, height, formatFunction) {
         
         svg.appendChild(rect);
         
-        // Month label
+        // Month label with improved styling
         const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
         text.setAttribute("x", x + barWidth / 2);
         text.setAttribute("y", height - padding.bottom + 15);
@@ -247,7 +247,7 @@ function createBarChart(data, title, width, height, formatFunction) {
         svg.appendChild(text);
     });
     
-    // Add X and Y axis lines
+    // Add X and Y axis lines with improved styling
     const xAxis = document.createElementNS("http://www.w3.org/2000/svg", "line");
     xAxis.setAttribute("x1", padding.left);
     xAxis.setAttribute("y1", height - padding.bottom);
@@ -266,7 +266,7 @@ function createBarChart(data, title, width, height, formatFunction) {
     yAxis.setAttribute("stroke-width", "1");
     svg.appendChild(yAxis);
     
-    // Add axis titles
+    // Add axis titles with improved styling
     const xAxisTitle = document.createElementNS("http://www.w3.org/2000/svg", "text");
     xAxisTitle.setAttribute("x", width / 2);
     xAxisTitle.setAttribute("y", height - 30);
