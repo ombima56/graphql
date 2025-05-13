@@ -11,7 +11,7 @@ function createSvgElement(width, height) {
 function createBarChart(data, title, width, height) {
     // Handle empty data case
     if (!data || data.length === 0) {
-        data = [{ label: 'No Data', value: 0 }];
+        data = [{ label: 'No Data', value: 0, displayValue: '0 B' }];
     }
     
     const svg = createSvgElement(width, height);
@@ -47,7 +47,15 @@ function createBarChart(data, title, width, height) {
         rect.setAttribute("height", barHeight);
         rect.setAttribute("fill", "#4CAF50");
         
-        // Label
+        // Value label
+        const valueText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        valueText.setAttribute("x", x + barWidth / 2);
+        valueText.setAttribute("y", y - 5);
+        valueText.setAttribute("text-anchor", "middle");
+        valueText.setAttribute("font-size", "10px");
+        valueText.textContent = d.displayValue || value;
+        
+        // Month label
         const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
         text.setAttribute("x", x + barWidth / 2);
         text.setAttribute("y", height - padding + 15);
@@ -56,6 +64,7 @@ function createBarChart(data, title, width, height) {
         text.setAttribute("font-size", "10px");
         
         svg.appendChild(rect);
+        svg.appendChild(valueText);
         svg.appendChild(text);
     });
     
