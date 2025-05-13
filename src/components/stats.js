@@ -100,29 +100,45 @@ async function renderStats() {
 
 // Process XP data for visualization
 function processXPData(transactions) {
-  if (!transactions || !Array.isArray(transactions) || transactions.length === 0) {
-    return [{ label: 'No Data', value: 0 }];
+  if (!transactions || !Array.isArray(transactions)) {
+    return [{ label: 'No Data', value: 0, displayValue: '0 B' }];
   }
-  
+
   // Group XP by month
   const xpByMonth = {};
+  const projectsByMonth = {}; // Track the largest project per month
   
   transactions.forEach(t => {
-    if (!t.createdAt) return;
-    
-    try {
+    if (t && t.type === 'xp' && t.createdAt) {
       const date = new Date(t.createdAt);
-      if (isNaN(date.getTime())) return; // Skip invalid dates
-      
-      const monthYear = `${date.getMonth() + 1}/${date.getFullYear()}`;
+      const monthYear = `${date.toLocaleString('default', { month: 'short' })} ${date.getFullYear()}`;
       
       if (!xpByMonth[monthYear]) {
         xpByMonth[monthYear] = 0;
+        projectsByMonth[monthYear] = { name: '', value: 0 };
       }
       
-      xpByMonth[monthYear] += Number(t.amount) || 0;
-    } catch (e) {
-      console.error('Error processing transaction date:', e);
+      const amount = Number(t.amount) || 0;
+      xpByMonth[monthYear] += amount;
+      
+      // Track the largest project for this month
+      if (amount > projectsByMonth[monthYear].value && t.path) {
+        // Extract project name from path
+        const pathParts = t.path.split('/');
+        let projectName = 'Unknown';
+        
+        if (pathParts.length >= 3) {
+          // Get the project name (usually the last part of the path)
+          projectName = pathParts[pathParts.length - 1];
+          // Clean up project names
+          projectName = projectName.replace(/-/g, ' ').replace(/^\w/, c => c.toUpperCase());
+        }
+        
+        projectsByMonth[monthYear] = { 
+          name: projectName, 
+          value: amount 
+        };
+      }
     }
   });
   
@@ -130,7 +146,8 @@ function processXPData(transactions) {
   const result = Object.entries(xpByMonth).map(([label, value]) => ({
     label,
     value,
-    displayValue: formatXP(value) // Add formatted value for display
+    displayValue: formatXP(value),
+    projectName: projectsByMonth[label].name
   }));
   
   return result.length > 0 ? result : [{ label: 'No Data', value: 0, displayValue: '0 B' }];
