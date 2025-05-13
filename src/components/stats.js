@@ -5,6 +5,7 @@ import {
   createPieChart,
 } from "../utils/svg.js";
 import { showError } from "./ui.js";
+import { formatXP } from './profile.js';
 
 // Function to render statistics section with SVG graphs
 async function renderStats() {
@@ -128,10 +129,11 @@ function processXPData(transactions) {
   // Convert to array format for chart
   const result = Object.entries(xpByMonth).map(([label, value]) => ({
     label,
-    value
+    value,
+    displayValue: formatXP(value) // Add formatted value for display
   }));
   
-  return result.length > 0 ? result : [{ label: 'No Data', value: 0 }];
+  return result.length > 0 ? result : [{ label: 'No Data', value: 0, displayValue: '0 B' }];
 }
 
 // Process audit data for visualization
