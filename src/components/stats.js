@@ -13,8 +13,20 @@ async function renderStats() {
     const xpData = await getUserXP();
     const auditData = await getUserAudits();
     
-    if (!xpData || !xpData.user || !auditData || !auditData.user) {
-      throw new Error('Failed to load statistics data. Please try again later.');
+    if (!xpData || !xpData.user) {
+      throw new Error('Failed to load XP data. Please try again later.');
+    }
+    
+    if (!auditData || !auditData.user) {
+      throw new Error('Failed to load audit data. Please try again later.');
+    }
+    
+    // Handle case where user is returned as an array
+    const xpUserData = Array.isArray(xpData.user) ? xpData.user[0] : xpData.user;
+    const auditUserData = Array.isArray(auditData.user) ? auditData.user[0] : auditData.user;
+    
+    if (!xpUserData || !auditUserData) {
+      throw new Error('Failed to load user data. Please try again later.');
     }
     
     const statsContainer = document.createElement("div");
@@ -35,7 +47,7 @@ async function renderStats() {
     xpTitle.textContent = "XP Progress Over Time";
     xpGraphContainer.appendChild(xpTitle);
 
-    const xpChartData = processXPData(xpData.user.transactions);
+    const xpChartData = processXPData(xpUserData.transactions);
     const xpChart = createBarChart(xpChartData, "XP Progress", 300, 200);
     xpGraphContainer.appendChild(xpChart);
 
@@ -47,7 +59,7 @@ async function renderStats() {
     auditTitle.textContent = "Audit Distribution";
     auditGraphContainer.appendChild(auditTitle);
 
-    const auditChartData = processAuditData(auditData.user.audits);
+    const auditChartData = processAuditData(auditUserData.audits);
     const auditChart = createPieChart(auditChartData, "Audit Types", 250, 250);
     auditGraphContainer.appendChild(auditChart);
     
@@ -59,7 +71,7 @@ async function renderStats() {
     projectXpTitle.textContent = "XP by Project Category";
     projectXpContainer.appendChild(projectXpTitle);
     
-    const projectXpData = processProjectXPData(xpData.user.transactions);
+    const projectXpData = processProjectXPData(xpUserData.transactions);
     const projectXpChart = createPieChart(projectXpData, "Project Categories", 250, 250);
     projectXpContainer.appendChild(projectXpChart);
 
@@ -87,68 +99,95 @@ async function renderStats() {
 
 // Process XP data for visualization
 function processXPData(transactions) {
+  if (!transactions || !Array.isArray(transactions) || transactions.length === 0) {
+    return [{ label: 'No Data', value: 0 }];
+  }
+  
   // Group XP by month
   const xpByMonth = {};
   
   transactions.forEach(t => {
-    const date = new Date(t.createdAt);
-    const monthYear = `${date.getMonth() + 1}/${date.getFullYear()}`;
+    if (!t.createdAt) return;
     
-    if (!xpByMonth[monthYear]) {
-      xpByMonth[monthYear] = 0;
+    try {
+      const date = new Date(t.createdAt);
+      if (isNaN(date.getTime())) return; // Skip invalid dates
+      
+      const monthYear = `${date.getMonth() + 1}/${date.getFullYear()}`;
+      
+      if (!xpByMonth[monthYear]) {
+        xpByMonth[monthYear] = 0;
+      }
+      
+      xpByMonth[monthYear] += Number(t.amount) || 0;
+    } catch (e) {
+      console.error('Error processing transaction date:', e);
     }
-    
-    xpByMonth[monthYear] += t.amount;
   });
   
   // Convert to array format for chart
-  return Object.entries(xpByMonth).map(([label, value]) => ({
+  const result = Object.entries(xpByMonth).map(([label, value]) => ({
     label,
     value
   }));
+  
+  return result.length > 0 ? result : [{ label: 'No Data', value: 0 }];
 }
 
 // Process audit data for visualization
 function processAuditData(audits) {
-  const upAudits = audits.filter((a) => a.type === "up").length;
-  const downAudits = audits.filter((a) => a.type === "down").length;
+  if (!audits || !Array.isArray(audits)) {
+    return [
+      { label: 'Received', value: 0 },
+      { label: 'Given', value: 0 }
+    ];
+  }
+
+  const upAudits = audits.filter((a) => a && a.type === "up").length;
+  const downAudits = audits.filter((a) => a && a.type === "down").length;
 
   return [
-    { label: "Received", value: upAudits },
-    { label: "Given", value: downAudits },
+    { label: 'Received', value: upAudits },
+    { label: 'Given', value: downAudits }
   ];
 }
 
 // Process XP data by project category
 function processProjectXPData(transactions) {
+  if (!transactions || !Array.isArray(transactions) || transactions.length === 0) {
+    return [{ label: 'No Data', value: 0 }];
+  }
+  
   // Extract project category from path
   const xpByCategory = {};
   
   transactions.forEach(t => {
-    if (t.type === 'xp' && t.path) {
+    if (t && t.type === 'xp' && t.path) {
       // Extract category from path (e.g., /div-01/graphql -> div-01)
       const pathParts = t.path.split('/');
       let category = 'Other';
       
       if (pathParts.length >= 2) {
-        category = pathParts[1];
+        category = pathParts[1] || 'Other';
       }
       
       if (!xpByCategory[category]) {
         xpByCategory[category] = 0;
       }
       
-      xpByCategory[category] += t.amount;
+      xpByCategory[category] += Number(t.amount) || 0;
     }
   });
   
   // Convert to array format for chart
-  return Object.entries(xpByCategory)
+  const result = Object.entries(xpByCategory)
     .filter(([_, value]) => value > 0)
     .map(([label, value]) => ({
       label,
       value
     }));
+    
+  return result.length > 0 ? result : [{ label: 'No Data', value: 0 }];
 }
 
 export { renderStats };
