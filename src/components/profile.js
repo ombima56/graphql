@@ -182,7 +182,11 @@ async function renderProfile() {
         }
         
         profileContainer.appendChild(recentActivity);
-        
+
+        // Section 5: Project Categories
+        const projectCategories = document.createElement('div');
+        profileContainer.appendChild(projectCategories);
+
         return profileContainer;
     } catch (error) {
         console.error('Profile rendering error:', error);
@@ -225,6 +229,60 @@ function formatXP(xp) {
     } else {
         return `${xp} B`;
     }
+}
+
+// Helper function to process project categories
+function processProjectCategories(transactions) {
+    if (!transactions || !Array.isArray(transactions) || transactions.length === 0) {
+        return [];
+    }
+    
+    // Extract project category from path
+    const xpByCategory = {};
+    let totalXP = 0;
+    
+    transactions.forEach(t => {
+        if (t && t.type === 'xp' && t.path) {
+            // Extract category from path (e.g., /div-01/graphql -> div-01)
+            const pathParts = t.path.split('/');
+            let category = 'Other';
+            
+            if (pathParts.length >= 2) {
+                // Get the main category (e.g., div-01, piscine-js)
+                category = pathParts[1] || 'Other';
+                
+                // Clean up category names for better display
+                if (category.startsWith('div-')) {
+                    category = 'Division ' + category.substring(4);
+                } else if (category === 'piscine-js') {
+                    category = 'JS Piscine';
+                } else if (category === 'piscine-go') {
+                    category = 'Go Piscine';
+                }
+            }
+            
+            if (!xpByCategory[category]) {
+                xpByCategory[category] = 0;
+            }
+            
+            const amount = Number(t.amount) || 0;
+            xpByCategory[category] += amount;
+            totalXP += amount;
+        }
+    });
+    
+    // Convert to array format and calculate percentages
+    const result = Object.entries(xpByCategory)
+        .filter(([_, value]) => value > 0)
+        .map(([label, value]) => ({
+            label,
+            value,
+            displayValue: formatXP(value),
+            percentage: totalXP > 0 ? Math.round((value / totalXP) * 100) : 0
+        }))
+        .sort((a, b) => b.value - a.value); // Sort by value in descending order
+        
+    return result;
 }
 
 export { renderProfile, formatXP };
