@@ -49,7 +49,7 @@ async function renderStats() {
     xpGraphContainer.appendChild(xpTitle);
 
     const xpChartData = processXPData(xpUserData.transactions);
-    const xpChart = createBarChart(xpChartData, "XP Progress", 300, 200);
+    const xpChart = createBarChart(xpChartData, "XP Progress", 400, 300, formatXP);
     xpGraphContainer.appendChild(xpChart);
 
     // Audit Distribution Graph (Pie Chart)
@@ -162,6 +162,7 @@ function processProjectXPData(transactions) {
   
   // Extract project category from path
   const xpByCategory = {};
+  let totalXP = 0;
   
   transactions.forEach(t => {
     if (t && t.type === 'xp' && t.path) {
@@ -170,14 +171,26 @@ function processProjectXPData(transactions) {
       let category = 'Other';
       
       if (pathParts.length >= 2) {
+        // Get the main category (e.g., div-01, piscine-js)
         category = pathParts[1] || 'Other';
+        
+        // Clean up category names for better display
+        if (category.startsWith('div-')) {
+          category = 'Division ' + category.substring(4);
+        } else if (category === 'piscine-js') {
+          category = 'JS Piscine';
+        } else if (category === 'piscine-go') {
+          category = 'Go Piscine';
+        }
       }
       
       if (!xpByCategory[category]) {
         xpByCategory[category] = 0;
       }
       
-      xpByCategory[category] += Number(t.amount) || 0;
+      const amount = Number(t.amount) || 0;
+      xpByCategory[category] += amount;
+      totalXP += amount;
     }
   });
   
@@ -186,10 +199,13 @@ function processProjectXPData(transactions) {
     .filter(([_, value]) => value > 0)
     .map(([label, value]) => ({
       label,
-      value
-    }));
+      value,
+      displayValue: formatXP(value),
+      percentage: totalXP > 0 ? Math.round((value / totalXP) * 100) : 0
+    }))
+    .sort((a, b) => b.value - a.value); // Sort by value in descending order
     
-  return result.length > 0 ? result : [{ label: 'No Data', value: 0 }];
+  return result.length > 0 ? result : [{ label: 'No Data', value: 0, displayValue: '0 B' }];
 }
 
 export { renderStats };
