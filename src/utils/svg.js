@@ -42,7 +42,23 @@ function createBarChart(data, title, width, height, formatFunction) {
     valueDisplay.setAttribute("fill", "#333");
     valueDisplay.setAttribute("id", "value-display");
     valueDisplay.textContent = "Click on a bar to see XP details";
+    valueDisplay.style.opacity = 0.7;
     svg.appendChild(valueDisplay);
+
+    // Add a background rectangle for the value display
+    const valueDisplayBg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    valueDisplayBg.setAttribute("x", width / 2 - 150);
+    valueDisplayBg.setAttribute("y", height - 25);
+    valueDisplayBg.setAttribute("width", 300);
+    valueDisplayBg.setAttribute("height", 20);
+    valueDisplayBg.setAttribute("rx", 4);
+    valueDisplayBg.setAttribute("ry", 4);
+    valueDisplayBg.setAttribute("fill", "rgba(255, 255, 255, 0.8)");
+    valueDisplayBg.setAttribute("stroke", "#ddd");
+    valueDisplayBg.setAttribute("stroke-width", "1");
+    valueDisplayBg.setAttribute("id", "value-display-bg");
+    valueDisplayBg.style.opacity = 0.7;
+    svg.insertBefore(valueDisplayBg, valueDisplay);
     
     // Add background grid lines
     const gridLines = 5;
@@ -168,7 +184,43 @@ function createBarChart(data, title, width, height, formatFunction) {
             
             // Update the value display
             const valueDisplay = this.parentNode.querySelector('#value-display');
-            valueDisplay.textContent = '${d.label}: ${d.displayValue || value}';
+            const displayText = '${d.projectName ? d.label + ": " + d.displayValue + " - " + d.projectName : d.label + ": " + d.displayValue}';
+            valueDisplay.textContent = displayText;
+            
+            // Adjust background rectangle width based on text length
+            const valueDisplayBg = this.parentNode.querySelector('#value-display-bg');
+            const textWidth = Math.min(Math.max(displayText.length * 7, 150), 350); // Estimate text width
+            valueDisplayBg.setAttribute('x', ${width / 2} - textWidth / 2);
+            valueDisplayBg.setAttribute('width', textWidth);
+            
+            // Make the display visible with full opacity
+            valueDisplay.style.opacity = 1;
+            valueDisplayBg.style.opacity = 1;
+            
+            // Clear any existing timeout
+            if (window.valueDisplayTimeout) {
+                clearTimeout(window.valueDisplayTimeout);
+            }
+            
+            // Set timeout to hide the display after 2 seconds
+            window.valueDisplayTimeout = setTimeout(() => {
+                // Fade out the display
+                valueDisplay.style.opacity = 0;
+                valueDisplayBg.style.opacity = 0;
+                
+                // Reset bar highlight
+                this.setAttribute('stroke', '#fff');
+                this.setAttribute('stroke-width', '1');
+                
+                // Reset the text after fade out animation completes
+                setTimeout(() => {
+                    valueDisplay.textContent = "Click on a bar to see XP details";
+                    valueDisplayBg.setAttribute('x', ${width / 2} - 150);
+                    valueDisplayBg.setAttribute('width', 300);
+                    valueDisplay.style.opacity = 0.7;
+                    valueDisplayBg.style.opacity = 0.7;
+                }, 300);
+            }, 2000);
         `);
         
         // Mark this as a bar for selection
