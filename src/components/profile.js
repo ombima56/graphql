@@ -2,16 +2,65 @@ import { getUserProfile } from '../api/graphql.js';
 import { logout } from '../api/auth.js';
 import { showError } from './ui.js';
 
+// Function to calculate audit ratio if not provided by the API
+function calculateAuditRatio(user) {
+    if (user.auditRatio !== undefined) {
+        return user.auditRatio;
+    }
+    
+    // If auditRatio is not provided, calculate it from totalUp and totalDown
+    if (user.totalUp && user.totalDown && user.totalDown > 0) {
+        return user.totalUp / user.totalDown;
+    }
+    
+    // Default value if we can't calculate
+    return 1.0;
+}
+
 // Function to render user profile
 async function renderProfile() {
     try {
+        console.log('Fetching user profile data...');
         const data = await getUserProfile();
         
-        if (!data || !data.user) {
-            throw new Error('Failed to load profile data. Please try again later.');
+        if (!data) {
+            console.error('No data returned from getUserProfile()');
+            throw new Error('Failed to load profile data. No data returned from server.');
         }
         
-        const user = data.user;
+        if (!data.user) {
+            console.error('No user data in response:', data);
+            throw new Error('Failed to load profile data. User data not found in response.');
+        }
+        
+        console.log('User profile data received:', data.user);
+        
+        // Handle case where user is returned as an array
+        const userData = Array.isArray(data.user) ? data.user[0] : data.user;
+        
+        if (!userData) {
+            console.error('No user data found in response array');
+            throw new Error('Failed to load profile data. User data not found in response.');
+        }
+        
+        // Add defensive checks for all user properties
+        const safeUser = {
+            firstName: userData.firstName || 'Unknown',
+            lastName: userData.lastName || 'User',
+            login: userData.login || 'unknown',
+            email: userData.email || 'N/A',
+            campus: userData.campus || 'N/A',
+            createdAt: userData.createdAt || new Date().toISOString(),
+            totalUp: userData.totalUp || 0,
+            totalDown: userData.totalDown || 0,
+            progresses: Array.isArray(userData.progresses) ? userData.progresses : [],
+            transactions: Array.isArray(userData.transactions) ? userData.transactions : []
+        };
+        
+        // Calculate audit ratio if not provided
+        safeUser.auditRatio = calculateAuditRatio(userData);
+        
+        console.log('Prepared safe user data:', safeUser);
         
         const profileContainer = document.createElement('div');
         profileContainer.className = 'profile-container';
@@ -21,7 +70,7 @@ async function renderProfile() {
         header.className = 'profile-header';
         
         const title = document.createElement('h1');
-        title.innerHTML = `<i class="fas fa-user-circle"></i> ${user.firstName} ${user.lastName}'s Profile`;
+        title.innerHTML = `<i class="fas fa-user-circle"></i> ${safeUser.firstName} ${safeUser.lastName}'s Profile`;
         
         const logoutBtn = document.createElement('button');
         logoutBtn.className = 'logout-btn';
@@ -37,10 +86,10 @@ async function renderProfile() {
         basicInfo.className = 'profile-section';
         basicInfo.innerHTML = `
             <h2><i class="fas fa-id-card"></i> Basic Information</h2>
-            <p><strong>Username:</strong> ${user.login}</p>
-            <p><strong>Email:</strong> ${user.email}</p>
-            <p><strong>Campus:</strong> ${user.campus}</p>
-            <p><strong>Joined:</strong> ${new Date(user.createdAt).toLocaleDateString('en-US', { 
+            <p><strong>Username:</strong> ${safeUser.login}</p>
+            <p><strong>Email:</strong> ${safeUser.email}</p>
+            <p><strong>Campus:</strong> ${safeUser.campus}</p>
+            <p><strong>Joined:</strong> ${new Date(safeUser.createdAt).toLocaleDateString('en-US', { 
                 year: 'numeric', 
                 month: 'long', 
                 day: 'numeric' 
@@ -53,9 +102,9 @@ async function renderProfile() {
         progressInfo.className = 'profile-section';
         progressInfo.innerHTML = `
             <h2><i class="fas fa-trophy"></i> XP and Progress</h2>
-            <p><strong>Total XP:</strong> ${formatNumber(calculateTotalXP(user.transactions))} XP</p>
-            <p><strong>Audit Ratio:</strong> ${user.auditRatio.toFixed(1)}</p>
-            <p><strong>Projects Completed:</strong> ${user.progresses.length}</p>
+            <p><strong>Total XP:</strong> ${formatNumber(calculateTotalXP(safeUser.transactions))} XP</p>
+            <p><strong>Audit Ratio:</strong> ${safeUser.auditRatio.toFixed(1)}</p>
+            <p><strong>Projects Completed:</strong> ${safeUser.progresses.length}</p>
         `;
         profileContainer.appendChild(progressInfo);
         
@@ -64,8 +113,8 @@ async function renderProfile() {
         auditInfo.className = 'profile-section';
         auditInfo.innerHTML = `
             <h2><i class="fas fa-exchange-alt"></i> Audit Information</h2>
-            <p><strong>Total Received:</strong> ${formatNumber(user.totalUp)} XP</p>
-            <p><strong>Total Given:</strong> ${formatNumber(user.totalDown)} XP</p>
+            <p><strong>Total Received:</strong> ${formatNumber(safeUser.totalUp)} XP</p>
+            <p><strong>Total Given:</strong> ${formatNumber(safeUser.totalDown)} XP</p>
         `;
         profileContainer.appendChild(auditInfo);
         
@@ -78,7 +127,7 @@ async function renderProfile() {
         recentActivity.appendChild(activityTitle);
         
         // Get the 5 most recent transactions
-        const recentTransactions = [...user.transactions]
+        const recentTransactions = [...safeUser.transactions]
             .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
             .slice(0, 5);
             
@@ -153,6 +202,10 @@ async function renderProfile() {
 
 // Helper function to calculate total XP
 function calculateTotalXP(transactions) {
+    if (!transactions || !Array.isArray(transactions)) {
+        return 0;
+    }
+    
     return transactions
         .filter(t => t.type === 'xp')
         .reduce((sum, t) => sum + t.amount, 0);
