@@ -31,956 +31,200 @@
         animation: loading 1.5s infinite;
       }
       @keyframes loading {
-        0%,
-        20% {
+        0% {
+          content: "";
+        }
+        25% {
           content: ".";
         }
-        40% {
+        50% {
           content: "..";
         }
-        60%,
-        100% {
+        75% {
           content: "...";
         }
+        100% {
+          content: "";
+        }
+      }
+      
+      /* Dark mode styles */
+      .dark {
+        color-scheme: dark;
+      }
+      .dark body {
+        background-color: #0f172a;
+        color: #f1f5f9;
+      }
+      .dark .bg-white {
+        background-color: #1e293b;
+      }
+      .dark .border-slate-200 {
+        border-color: #334155;
+      }
+      .dark .text-slate-500 {
+        color: #94a3b8;
+      }
+      .dark .text-slate-700 {
+        color: #cbd5e1;
+      }
+      .dark .text-slate-900 {
+        color: #f1f5f9;
+      }
+      .dark .shadow-lg {
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -4px rgba(0, 0, 0, 0.5);
       }
     </style>
   </head>
-  <body class="min-h-screen p-4 md:p-8">
-    <div class="container mx-auto max-w-6xl">
+  <body>
+    <!-- Profile Page -->
+    <div id="profilePage" class="min-h-screen p-4 md:p-8">
       <!-- Header -->
-      <div
-        class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4"
-      >
-        <h1 class="text-4xl font-bold uppercase text-slate-700 font-mono">
-          PROFILE
+      <header class="flex justify-between items-center mb-8">
+        <h1 class="text-2xl font-bold font-mono text-slate-900 dark:text-slate-100">
+          GraphQL Profile
         </h1>
-        <button
-          id="logoutBtn"
-          class="px-4 py-2 bg-slate-700 hover:bg-slate-800 text-slate-100 font-mono font-bold uppercase border-2 border-slate-700 hover-lift transition-all duration-150"
-        >
-          LOG OUT
-        </button>
-      </div>
+        <div class="flex space-x-2">
+          <button
+            id="darkModeBtn"
+            class="px-3 py-1 bg-slate-200 dark:bg-slate-700 rounded hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
+          >
+            🌙 Dark
+          </button>
+          <button
+            id="logoutBtn"
+            class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+          >
+            Logout
+          </button>
+        </div>
+      </header>
 
-      <!-- Profile Info Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+      <!-- Main Content -->
+      <main class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <!-- User Info Card -->
         <div
-          class="bg-white border-2 border-slate-200 p-6 hover-lift shadow-md rounded-lg"
+          class="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg border-2 border-slate-200 dark:border-slate-700 hover-lift"
         >
-          <h3 class="text-lg font-bold uppercase text-slate-700 mb-4 font-mono">
-            USER INFO
-          </h3>
-          <div id="userInfo" class="space-y-2 font-mono text-slate-700">
-            <div class="loading-dots">Loading</div>
+          <h2 class="text-xl font-bold mb-4 font-mono text-slate-900 dark:text-slate-100">
+            PROFILE
+          </h2>
+          <div id="userInfo" class="space-y-2 text-slate-700 dark:text-slate-300">
+            <p class="loading-dots">Loading user info</p>
           </div>
         </div>
 
         <!-- XP Card -->
         <div
-          class="bg-white border-2 border-slate-200 p-6 hover-lift shadow-md rounded-lg"
+          class="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg border-2 border-slate-200 dark:border-slate-700 hover-lift"
         >
-          <h3 class="text-lg font-bold uppercase text-slate-700 mb-4 font-mono">
-            TOTAL XP
-          </h3>
-          <div id="totalXP" class="text-3xl font-bold text-green-500 font-mono">
-            <div class="loading-dots text-base text-slate-500">Loading</div>
+          <h2 class="text-xl font-bold mb-4 font-mono text-slate-900 dark:text-slate-100">
+            XP
+          </h2>
+          <div
+            id="totalXP"
+            class="flex items-center justify-center h-24 text-slate-700 dark:text-slate-300"
+          >
+            <span class="loading-dots">Loading XP data</span>
           </div>
         </div>
 
         <!-- Audit Ratio Card -->
         <div
-          class="bg-white border-2 border-slate-200 p-6 hover-lift shadow-md rounded-lg"
+          class="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg border-2 border-slate-200 dark:border-slate-700 hover-lift"
         >
-          <h3 class="text-lg font-bold uppercase text-slate-700 mb-4 font-mono">
+          <h2 class="text-xl font-bold mb-4 font-mono text-slate-900 dark:text-slate-100">
             AUDIT RATIO
-          </h3>
+          </h2>
           <div
             id="auditRatio"
-            class="text-3xl font-bold text-blue-500 font-mono"
+            class="flex items-center justify-center h-24 text-slate-700 dark:text-slate-300"
           >
-            <div class="loading-dots text-base text-slate-500">Loading</div>
+            <span class="loading-dots">Loading audit data</span>
           </div>
         </div>
-      </div>
 
-      <!-- Statistics Section -->
-      <div
-        class="bg-white border-2 border-slate-200 p-6 mb-8 shadow-md rounded-lg"
-      >
-        <h2 class="text-2xl font-bold uppercase text-slate-700 mb-6 font-mono">
-          STATISTICS
-        </h2>
-
-        <!-- Chart Controls -->
-        <div class="flex flex-wrap gap-4 mb-6">
-          <button
-            onclick="showChart('xpProgress')"
-            class="chart-btn px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-mono font-bold uppercase border-2 border-blue-600 hover-lift transition-all duration-150 rounded"
-          >
-            XP PROGRESS
-          </button>
-          <button
-            onclick="showChart('projectResults')"
-            class="chart-btn px-4 py-2 bg-slate-700 hover:bg-slate-800 text-slate-100 font-mono font-bold uppercase border-2 border-slate-700 hover-lift transition-all duration-150 rounded"
-          >
-            PROJECT RESULTS
-          </button>
-        </div>
-
-        <!-- Charts Container -->
-        <div id="chartsContainer" class="min-h-96">
-          <!-- XP Progress Chart -->
-          <div id="xpProgressChart" class="chart-section">
-            <h3
-              class="text-lg font-bold uppercase text-slate-700 mb-4 font-mono"
-            >
-              XP EARNED OVER TIME
-            </h3>
-            <svg
-              id="xpSvg"
-              width="100%"
-              height="300"
-              class="border-2 border-slate-200 bg-slate-50 rounded"
-            >
-              <!-- Chart will be generated here -->
-            </svg>
-          </div>
-
-          <!-- Project Results Chart -->
-          <div id="projectResultsChart" class="chart-section hidden">
-            <h3
-              class="text-lg font-bold uppercase text-slate-700 mb-4 font-mono"
-            >
-              PROJECT PASS/FAIL RATIO
-            </h3>
-            <svg
-              id="resultsSvg"
-              width="100%"
-              height="300"
-              class="border-2 border-slate-200 bg-slate-50 rounded"
-            >
-              <!-- Chart will be generated here -->
-            </svg>
-          </div>
-        </div>
-      </div>
-
-      <!-- Recent Activity -->
-      <div class="bg-white border-2 border-slate-200 p-6 shadow-md rounded-lg">
-        <h3 class="text-lg font-bold uppercase text-slate-700 mb-4 font-mono">
-          RECENT ACTIVITY
-        </h3>
+        <!-- Charts Section -->
         <div
-          id="recentActivity"
-          class="space-y-2 font-mono text-sm text-slate-700"
+          class="md:col-span-2 bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg border-2 border-slate-200 dark:border-slate-700 hover-lift"
         >
-          <div class="loading-dots">Loading</div>
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold font-mono text-slate-900 dark:text-slate-100">
+              STATISTICS
+            </h2>
+            <div class="flex space-x-2">
+              <button
+                id="xpChartBtn"
+                class="chart-btn px-3 py-1 text-sm bg-blue-600 border-2 border-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                onclick="showChart('xpProgress')"
+              >
+                XP PROGRESS
+              </button>
+              <button
+                id="resultsChartBtn"
+                class="chart-btn px-3 py-1 text-sm bg-slate-700 border-2 border-slate-700 text-white rounded hover:bg-slate-800 transition-colors"
+                onclick="showChart('results')"
+              >
+                PROJECT RESULTS
+              </button>
+            </div>
+          </div>
+
+          <!-- XP Progress Chart -->
+          <div id="xpProgressChart" class="chart-section h-80">
+            <svg id="xpSvg" class="w-full h-full">
+              <text
+                x="50%"
+                y="50%"
+                text-anchor="middle"
+                class="text-slate-500 dark:text-slate-400"
+              >
+                Loading XP data...
+              </text>
+            </svg>
+          </div>
+
+          <!-- Results Chart -->
+          <div id="resultsChart" class="chart-section h-80 hidden">
+            <svg id="resultsSvg" class="w-full h-full">
+              <text
+                x="50%"
+                y="50%"
+                text-anchor="middle"
+                class="text-slate-500 dark:text-slate-400"
+              >
+                Loading project data...
+              </text>
+            </svg>
+          </div>
         </div>
-      </div>
+
+        <!-- Recent Activity Card -->
+        <div
+          class="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg border-2 border-slate-200 dark:border-slate-700 hover-lift"
+        >
+          <h2 class="text-xl font-bold mb-4 font-mono text-slate-900 dark:text-slate-100">
+            RECENT ACTIVITY
+          </h2>
+          <div
+            id="recentActivity"
+            class="space-y-4 text-slate-700 dark:text-slate-300"
+          >
+            <p class="loading-dots">Loading activity data</p>
+          </div>
+        </div>
+      </main>
+
+      <!-- Footer -->
+      <footer class="mt-8 text-center text-sm text-slate-500 dark:text-slate-400">
+        <p>GraphQL Profile Viewer &copy; 2023</p>
+      </footer>
     </div>
 
-    <script>
-      // API Configuration - Using the correct API endpoint
-      const API_BASE = 'https://learn.zone01kisumu.ke/api';
-      const GRAPHQL_ENDPOINT = `${API_BASE}/graphql-engine/v1/graphql`;
-
-      // Check if user is logged in
-      document.addEventListener("DOMContentLoaded", () => {
-        const jwt = localStorage.getItem("jwt");
-        if (!jwt) {
-          window.location.href = "login.html";
-          return;
-        }
-
-        loadProfile();
-      });
-
-      // Logout functionality
-      document.getElementById("logoutBtn").addEventListener("click", () => {
-        localStorage.removeItem("jwt");
-        window.location.href = "login.html";
-      });
-
-      // Chart display toggle
-      function showChart(chartId) {
-        const charts = document.querySelectorAll(".chart-section");
-        const buttons = document.querySelectorAll(".chart-btn");
-
-        charts.forEach((chart) => chart.classList.add("hidden"));
-        document.getElementById(`${chartId}Chart`).classList.remove("hidden");
-
-        buttons.forEach((btn) => {
-          btn.classList.remove("bg-blue-600", "border-blue-600");
-          btn.classList.add("bg-slate-700", "border-slate-700");
-        });
-
-        const activeButton = Array.from(buttons).find((btn) =>
-          btn.textContent
-            .trim()
-            .includes(
-              chartId === "xpProgress" ? "XP PROGRESS" : "PROJECT RESULTS"
-            )
-        );
-
-        if (activeButton) {
-          activeButton.classList.remove("bg-slate-700", "border-slate-700");
-          activeButton.classList.add("bg-blue-600", "border-blue-600");
-        }
-      }
-
-      // GraphQL query function
-      async function graphqlQuery(query, variables = {}) {
-        const jwt = localStorage.getItem("jwt");
-        if (!jwt) {
-          window.location.href = "login.html";
-          return null;
-        }
-
-        try {
-          // Clean the token if needed
-          const cleanToken = jwt.replace(/^["'](.*)["']$/, "$1").trim();
-
-          const response = await fetch(GRAPHQL_ENDPOINT, {
-            method: "POST",
-            headers: {
-              'Authorization': `Bearer ${cleanToken}`,
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-              'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify({ query, variables }),
-          });
-
-          if (!response.ok) {
-            console.error(
-              `HTTP error ${response.status}: ${response.statusText}`
-            );
-            if (response.status === 401) {
-              localStorage.removeItem("jwt");
-              window.location.href = "login.html";
-            }
-            return null;
-          }
-
-          const data = await response.json();
-
-          if (data.errors) {
-            console.error("GraphQL errors:", data.errors);
-            const errorMessage =
-              data.errors[0]?.message || "Unknown GraphQL error";
-            console.error("Error message:", errorMessage);
-
-            if (
-              errorMessage.includes("JWT") ||
-              errorMessage.includes("token") ||
-              errorMessage.includes("auth")
-            ) {
-              localStorage.removeItem("jwt");
-              window.location.href = "login.html";
-            }
-
-            return null;
-          }
-
-          return data.data;
-        } catch (error) {
-          console.error("GraphQL request failed:", error);
-          return null;
-        }
-      }
-
-      // Load profile data
-      async function loadProfile() {
-        try {
-          // Basic user query (normal query)
-          const userQuery = `
-                    query {
-                        user {
-                            id
-                            login
-                            firstName
-                            lastName
-                            email
-                            createdAt
-                        }
-                    }
-                `;
-
-          const userData = await graphqlQuery(userQuery);
-
-          if (userData && userData.user) {
-            const user = Array.isArray(userData.user)
-              ? userData.user[0]
-              : userData.user;
-            displayUserInfo(user);
-          }
-
-          // XP transactions query (query with arguments)
-          const xpQuery = `
-                    query {
-                        transaction(where: {type: {_eq: "xp"}}) {
-                            id
-                            type
-                            amount
-                            createdAt
-                            path
-                        }
-                    }
-                `;
-
-          const xpData = await graphqlQuery(xpQuery);
-
-          if (xpData && xpData.transaction) {
-            displayXPInfo(xpData.transaction);
-            generateXPChart(xpData.transaction);
-          }
-
-          // Audit transactions query
-          const auditQuery = `
-                    query {
-                        transaction(where: {type: {_in: ["up", "down"]}}) {
-                            id
-                            type
-                            amount
-                            createdAt
-                        }
-                    }
-                `;
-
-          const auditData = await graphqlQuery(auditQuery);
-
-          if (auditData && auditData.transaction) {
-            displayAuditRatio(auditData.transaction);
-          }
-
-          // Progress query (nested query)
-          const progressQuery = `
-                    query {
-                        progress {
-                            id
-                            grade
-                            createdAt
-                            updatedAt
-                            path
-                            object {
-                                id
-                                name
-                                type
-                            }
-                        }
-                    }
-                `;
-
-          const progressData = await graphqlQuery(progressQuery);
-
-          if (progressData && progressData.progress) {
-            generateResultsChart(progressData.progress);
-            displayRecentActivity(progressData.progress);
-          } else {
-            // Fallback to results if progress is not available
-            const resultsQuery = `
-                        query {
-                            result {
-                                id
-                                grade
-                                createdAt
-                                path
-                            }
-                        }
-                    `;
-
-            const resultsData = await graphqlQuery(resultsQuery);
-
-            if (resultsData && resultsData.result) {
-              generateResultsChart(resultsData.result);
-              displayRecentActivity(resultsData.result);
-            }
-          }
-        } catch (error) {
-          console.error("Error loading profile:", error);
-        }
-      }
-
-      // Display user info
-      function displayUserInfo(user) {
-        const userInfoDiv = document.getElementById("userInfo");
-
-        if (!user) {
-          userInfoDiv.innerHTML =
-            '<p class="text-red-500">User data not available</p>';
-          return;
-        }
-
-        const joinDate = new Date(user.createdAt).toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        });
-
-        userInfoDiv.innerHTML = `
-                <p><span class="text-slate-500">Login:</span> ${
-                  user.login || "N/A"
-                }</p>
-                <p><span class="text-slate-500">Name:</span> ${
-                  user.firstName && user.lastName
-                    ? `${user.firstName} ${user.lastName}`
-                    : "N/A"
-                }</p>
-                <p><span class="text-slate-500">Email:</span> ${
-                  user.email || "N/A"
-                }</p>
-                <p><span class="text-slate-500">Joined:</span> ${joinDate}</p>
-            `;
-      }
-
-      // Display XP info
-      function displayXPInfo(transactions) {
-        const totalXPDiv = document.getElementById("totalXP");
-
-        if (!transactions || transactions.length === 0) {
-          totalXPDiv.innerHTML =
-            '<span class="text-base text-slate-500">No XP data available</span>';
-          return;
-        }
-
-        const totalXP = transactions.reduce(
-          (sum, t) => sum + (t.amount || 0),
-          0
-        );
-        
-        // Format the XP value using the formatDataSize function
-        const formattedXP = formatDataSize(totalXP);
-        
-        // Display the formatted XP value
-        totalXPDiv.innerHTML = `
-          <div class="flex items-center justify-center">
-            <span class="text-3xl font-bold">${formattedXP}</span>
-          </div>
-        `;
-      }
-
-      // Display audit ratio
-      function displayAuditRatio(transactions) {
-        const auditRatioDiv = document.getElementById("auditRatio");
-
-        if (!transactions || transactions.length === 0) {
-          auditRatioDiv.innerHTML =
-            '<span class="text-base text-slate-500">No audit data available</span>';
-          return;
-        }
-
-        const upTotal = transactions
-          .filter((t) => t.type === "up")
-          .reduce((sum, t) => sum + (t.amount || 0), 0);
-
-        const downTotal = transactions
-          .filter((t) => t.type === "down")
-          .reduce((sum, t) => sum + (t.amount || 0), 0);
-
-        if (upTotal > 0 || downTotal > 0) {
-          // Format the values in B, KB, or MB
-          const upFormatted = formatDataSize(upTotal);
-          const downFormatted = formatDataSize(downTotal);
-          
-          // Calculate ratio (if downTotal is 0, set ratio to upTotal or 1.0)
-          const ratio = downTotal > 0 ? (upTotal / downTotal).toFixed(1) : (upTotal > 0 ? upTotal.toFixed(1) : "1.0");
-          
-          // Create HTML with a vertical layout and aligned labels
-          auditRatioDiv.innerHTML = `
-            <div class="space-y-3">
-              <div class="flex justify-between items-center">
-                <span class="text-sm text-slate-500">Ratio:</span>
-                <span class="text-xl font-bold text-purple-500">${ratio}</span>
-              </div>
-              <div class="flex justify-between items-center">
-                <span class="text-sm text-slate-500">Received:</span>
-                <span class="text-lg font-bold text-green-500">${upFormatted}</span>
-              </div>
-              <div class="flex justify-between items-center">
-                <span class="text-sm text-slate-500">Given:</span>
-                <span class="text-lg font-bold text-blue-500">${downFormatted}</span>
-              </div>
-            </div>
-          `;
-        } else {
-          auditRatioDiv.innerHTML =
-            '<span class="text-base text-slate-500">No audit data</span>';
-        }
-      }
-
-      // Helper function to format data size in B, KB, or MB
-      function formatDataSize(bytes) {
-        if (bytes >= 1000000) {
-          return `${(bytes / 1000000).toFixed(2)} MB`;
-        } else if (bytes >= 1000) {
-          return `${(bytes / 1000).toFixed(1)} KB`;
-        } else {
-          return `${bytes} B`;
-        }
-      }
-
-      // Generate XP chart (SVG bar chart)
-      function generateXPChart(transactions) {
-        const svg = document.getElementById("xpSvg");
-        svg.innerHTML = "";
-
-        if (!transactions || transactions.length === 0) {
-          svg.innerHTML =
-            '<text x="50%" y="50%" text-anchor="middle" class="text-slate-500">No XP data available</text>';
-          return;
-        }
-
-        const width = svg.clientWidth;
-        const height = svg.clientHeight;
-        const padding = { top: 40, right: 30, bottom: 60, left: 60 };
-
-        // Sort transactions by date
-        const sortedData = [...transactions].sort(
-          (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
-        );
-
-        // Group by month
-        const monthlyData = sortedData.reduce((acc, t) => {
-          const date = new Date(t.createdAt);
-          const monthYear = `${date.getFullYear()}-${date.getMonth() + 1}`;
-
-          if (!acc[monthYear]) {
-            acc[monthYear] = {
-              monthYear,
-              label: date.toLocaleDateString("en-US", {
-                month: "short",
-                year: "numeric",
-              }),
-              amount: 0,
-            };
-          }
-
-          acc[monthYear].amount += t.amount || 0;
-          return acc;
-        }, {});
-
-        const dataPoints = Object.values(monthlyData);
-
-        // Calculate scales
-        const maxXP = Math.max(...dataPoints.map((d) => d.amount));
-        const barWidth =
-          (width - padding.left - padding.right) / dataPoints.length - 10;
-
-        // Draw axes
-        const xAxis = document.createElementNS(
-          "http://www.w3.org/2000/svg",
-          "line"
-        );
-        xAxis.setAttribute("x1", padding.left);
-        xAxis.setAttribute("y1", height - padding.bottom);
-        xAxis.setAttribute("x2", width - padding.right);
-        xAxis.setAttribute("y2", height - padding.bottom);
-        xAxis.setAttribute("stroke", "#94a3b8");
-        xAxis.setAttribute("stroke-width", "2");
-        svg.appendChild(xAxis);
-
-        const yAxis = document.createElementNS(
-          "http://www.w3.org/2000/svg",
-          "line"
-        );
-        yAxis.setAttribute("x1", padding.left);
-        yAxis.setAttribute("y1", padding.top);
-        yAxis.setAttribute("x2", padding.left);
-        yAxis.setAttribute("y2", height - padding.bottom);
-        yAxis.setAttribute("stroke", "#94a3b8");
-        yAxis.setAttribute("stroke-width", "2");
-        svg.appendChild(yAxis);
-
-        // Draw y-axis labels
-        for (let i = 0; i <= 5; i++) {
-          const yValue = maxXP * (i / 5);
-          const yPos =
-            height -
-            padding.bottom -
-            (height - padding.top - padding.bottom) * (i / 5);
-
-          const label = document.createElementNS(
-            "http://www.w3.org/2000/svg",
-            "text"
-          );
-          label.setAttribute("x", padding.left - 10);
-          label.setAttribute("y", yPos);
-          label.setAttribute("text-anchor", "end");
-          label.setAttribute("alignment-baseline", "middle");
-          label.setAttribute("font-size", "12");
-          label.setAttribute("font-family", "JetBrains Mono, monospace");
-          label.setAttribute("fill", "#64748b");
-          label.textContent = Math.round(yValue).toLocaleString();
-          svg.appendChild(label);
-
-          // Grid line
-          const gridLine = document.createElementNS(
-            "http://www.w3.org/2000/svg",
-            "line"
-          );
-          gridLine.setAttribute("x1", padding.left);
-          gridLine.setAttribute("y1", yPos);
-          gridLine.setAttribute("x2", width - padding.right);
-          gridLine.setAttribute("y2", yPos);
-          gridLine.setAttribute("stroke", "#e2e8f0");
-          gridLine.setAttribute("stroke-width", "1");
-          svg.appendChild(gridLine);
-        }
-
-        // Draw bars and labels
-        dataPoints.forEach((point, i) => {
-          const x =
-            padding.left +
-            i * ((width - padding.left - padding.right) / dataPoints.length) +
-            5;
-          const barHeight =
-            (point.amount / maxXP) * (height - padding.top - padding.bottom);
-          const y = height - padding.bottom - barHeight;
-
-          // Bar
-          const bar = document.createElementNS(
-            "http://www.w3.org/2000/svg",
-            "rect"
-          );
-          bar.setAttribute("x", x);
-          bar.setAttribute("y", y);
-          bar.setAttribute("width", barWidth);
-          bar.setAttribute("height", barHeight);
-          bar.setAttribute("fill", "#3b82f6");
-          bar.setAttribute("rx", "4");
-          bar.setAttribute("class", "chart-bar");
-
-          // Tooltip on hover
-          bar.setAttribute("data-amount", point.amount.toLocaleString());
-          bar.setAttribute("data-month", point.label);
-
-          bar.addEventListener("mouseover", function (e) {
-            const tooltip = document.createElementNS(
-              "http://www.w3.org/2000/svg",
-              "g"
-            );
-            tooltip.setAttribute("id", "tooltip");
-
-            const tooltipRect = document.createElementNS(
-              "http://www.w3.org/2000/svg",
-              "rect"
-            );
-            tooltipRect.setAttribute("x", x - 10);
-            tooltipRect.setAttribute("y", y - 40);
-            tooltipRect.setAttribute("width", "120");
-            tooltipRect.setAttribute("height", "35");
-            tooltipRect.setAttribute("fill", "#1e293b");
-            tooltipRect.setAttribute("rx", "4");
-
-            const tooltipText = document.createElementNS(
-              "http://www.w3.org/2000/svg",
-              "text"
-            );
-            tooltipText.setAttribute("x", x + 50);
-            tooltipText.setAttribute("y", y - 20);
-            tooltipText.setAttribute("text-anchor", "middle");
-            tooltipText.setAttribute("fill", "white");
-            tooltipText.setAttribute("font-size", "12");
-            tooltipText.setAttribute(
-              "font-family",
-              "JetBrains Mono, monospace"
-            );
-            tooltipText.textContent = `${point.amount.toLocaleString()} XP`;
-
-            tooltip.appendChild(tooltipRect);
-            tooltip.appendChild(tooltipText);
-            svg.appendChild(tooltip);
-          });
-
-          bar.addEventListener("mouseout", function () {
-            const tooltip = document.getElementById("tooltip");
-            if (tooltip) {
-              tooltip.remove();
-            }
-          });
-
-          svg.appendChild(bar);
-
-          // X-axis label
-          const label = document.createElementNS(
-            "http://www.w3.org/2000/svg",
-            "text"
-          );
-          label.setAttribute("x", x + barWidth / 2);
-          label.setAttribute("y", height - padding.bottom + 20);
-          label.setAttribute("text-anchor", "middle");
-          label.setAttribute("font-size", "12");
-          label.setAttribute("font-family", "JetBrains Mono, monospace");
-          label.setAttribute("fill", "#64748b");
-          label.textContent = point.label;
-          svg.appendChild(label);
-        });
-
-        // Chart title
-        const title = document.createElementNS(
-          "http://www.w3.org/2000/svg",
-          "text"
-        );
-        title.setAttribute("x", width / 2);
-        title.setAttribute("y", 20);
-        title.setAttribute("text-anchor", "middle");
-        title.setAttribute("font-size", "14");
-        title.setAttribute("font-weight", "bold");
-        title.setAttribute("font-family", "JetBrains Mono, monospace");
-        title.setAttribute("fill", "#334155");
-        title.textContent = "XP EARNED BY MONTH";
-        svg.appendChild(title);
-      }
-
-      // Generate results chart (SVG pie chart)
-      function generateResultsChart(data) {
-        const svg = document.getElementById("resultsSvg");
-        svg.innerHTML = "";
-
-        if (!data || data.length === 0) {
-          svg.innerHTML =
-            '<text x="50%" y="50%" text-anchor="middle" class="text-slate-500">No project data available</text>';
-          return;
-        }
-
-        const width = svg.clientWidth;
-        const height = svg.clientHeight;
-        const radius = Math.min(width, height) / 2 - 60;
-        const centerX = width / 2;
-        const centerY = height / 2;
-
-        // Count pass/fail results
-        const passCount = data.filter((item) => item.grade > 0).length;
-        const failCount = data.filter((item) => item.grade === 0).length;
-        const total = passCount + failCount;
-
-        if (total === 0) {
-          svg.innerHTML =
-            '<text x="50%" y="50%" text-anchor="middle" class="text-slate-500">No project results available</text>';
-          return;
-        }
-
-        const passAngle = (passCount / total) * 2 * Math.PI;
-        const failAngle = (failCount / total) * 2 * Math.PI;
-
-        // Function to create a pie slice
-        function createSlice(startAngle, endAngle, color) {
-          const slice = document.createElementNS(
-            "http://www.w3.org/2000/svg",
-            "path"
-          );
-
-          // Calculate the path for the slice
-          const x1 = centerX + radius * Math.cos(startAngle - Math.PI / 2);
-          const y1 = centerY + radius * Math.sin(startAngle - Math.PI / 2);
-          const x2 = centerX + radius * Math.cos(endAngle - Math.PI / 2);
-          const y2 = centerY + radius * Math.sin(endAngle - Math.PI / 2);
-
-          // Determine if the slice is more than half the circle
-          const largeArcFlag = endAngle - startAngle > Math.PI ? 1 : 0;
-
-          // Create the path
-          const pathData = [
-            `M ${centerX} ${centerY}`,
-            `L ${x1} ${y1}`,
-            `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`,
-            "Z",
-          ].join(" ");
-
-          slice.setAttribute("d", pathData);
-          slice.setAttribute("fill", color);
-          return slice;
-        }
-
-        // Passed slice (green)
-        const passedSlice = createSlice(0, passAngle, "#10b981");
-        svg.appendChild(passedSlice);
-
-        // Failed slice (red)
-        const failedSlice = createSlice(
-          passAngle,
-          passAngle + failAngle,
-          "#ef4444"
-        );
-        svg.appendChild(failedSlice);
-
-        // Add legend
-        const legend = document.createElementNS(
-          "http://www.w3.org/2000/svg",
-          "g"
-        );
-
-        // Passed legend
-        const passedRect = document.createElementNS(
-          "http://www.w3.org/2000/svg",
-          "rect"
-        );
-        passedRect.setAttribute("x", "20");
-        passedRect.setAttribute("y", "20");
-        passedRect.setAttribute("width", "15");
-        passedRect.setAttribute("height", "15");
-        passedRect.setAttribute("fill", "#10b981");
-        legend.appendChild(passedRect);
-
-        const passedText = document.createElementNS(
-          "http://www.w3.org/2000/svg",
-          "text"
-        );
-        passedText.setAttribute("x", "45");
-        passedText.setAttribute("y", "32");
-        passedText.setAttribute("fill", "#334155");
-        passedText.setAttribute("font-family", "JetBrains Mono");
-        passedText.setAttribute("font-size", "12");
-        passedText.textContent = `PASSED: ${passCount}`;
-        legend.appendChild(passedText);
-
-        // Failed legend
-        const failedRect = document.createElementNS(
-          "http://www.w3.org/2000/svg",
-          "rect"
-        );
-        failedRect.setAttribute("x", "20");
-        failedRect.setAttribute("y", "45");
-        failedRect.setAttribute("width", "15");
-        failedRect.setAttribute("height", "15");
-        failedRect.setAttribute("fill", "#ef4444");
-        legend.appendChild(failedRect);
-
-        const failedText = document.createElementNS(
-          "http://www.w3.org/2000/svg",
-          "text"
-        );
-        failedText.setAttribute("x", "45");
-        failedText.setAttribute("y", "57");
-        failedText.setAttribute("fill", "#334155");
-        failedText.setAttribute("font-family", "JetBrains Mono");
-        failedText.setAttribute("font-size", "12");
-        failedText.textContent = `FAILED: ${failCount}`;
-        legend.appendChild(failedText);
-
-        svg.appendChild(legend);
-      }
-
-      // Display recent activity
-      function displayRecentActivity(activities) {
-        const recentActivityDiv = document.getElementById("recentActivity");
-
-        if (!activities || activities.length === 0) {
-          recentActivityDiv.innerHTML =
-            '<p class="text-slate-500">No recent activity available</p>';
-          return;
-        }
-
-        // Sort activities by date (newest first)
-        const sortedActivities = [...activities].sort(
-          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-        );
-
-        // Take the 5 most recent activities
-        const recentActivities = sortedActivities.slice(0, 5);
-
-        let html = '';
-        
-        recentActivities.forEach(activity => {
-          const date = new Date(activity.createdAt).toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "short",
-            day: "numeric"
-          });
-          
-          const projectName = activity.object?.name || activity.path || "Unknown project";
-          const grade = activity.grade !== undefined ? activity.grade : "N/A";
-          
-          html += `
-            <div class="border-l-4 ${grade > 0 ? 'border-green-500' : 'border-red-500'} pl-4 py-2">
-              <div class="flex justify-between items-start">
-                <div>
-                  <p class="font-bold">${projectName}</p>
-                  <p class="text-xs text-slate-500">${date}</p>
-                </div>
-                <div class="text-right">
-                  <span class="px-2 py-1 rounded ${
-                    grade > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                  }">${grade > 0 ? 'PASS' : 'FAIL'}</span>
-                </div>
-              </div>
-            </div>
-          `;
-        });
-        
-        recentActivityDiv.innerHTML = html;
-      }
-
-      // Chart switching
-      function showChart(chartType) {
-        // Update button states
-        document.querySelectorAll(".chart-btn").forEach((btn) => {
-          btn.classList.remove(
-            "bg-blue-600",
-            "hover:bg-blue-700",
-            "text-white",
-            "border-blue-600"
-          );
-          btn.classList.add(
-            "bg-slate-700",
-            "dark:bg-slate-600",
-            "hover:bg-slate-800",
-            "dark:hover:bg-slate-500",
-            "text-slate-100",
-            "border-slate-700",
-            "dark:border-slate-600"
-          );
-        });
-
-        event.target.classList.remove(
-          "bg-slate-700",
-          "dark:bg-slate-600",
-          "hover:bg-slate-800",
-          "dark:hover:bg-slate-500",
-          "text-slate-100",
-          "border-slate-700",
-          "dark:border-slate-600"
-        );
-        event.target.classList.add(
-          "bg-blue-600",
-          "hover:bg-blue-700",
-          "text-white",
-          "border-blue-600"
-        );
-
-        // Show selected chart
-        document.querySelectorAll(".chart-section").forEach((section) => {
-          section.classList.add("hidden");
-        });
-        document.getElementById(chartType + "Chart").classList.remove("hidden");
-      }
-
-      // Show profile page
-      function showProfile() {
-        document.getElementById("loginPage").classList.add("hidden");
-        document.getElementById("profilePage").classList.remove("hidden");
-      }
-
-      // Logout functionality
-      document.getElementById("logoutBtn").addEventListener("click", () => {
-        jwt = null;
-        userData = {};
-        document.getElementById("loginForm").reset();
-        document.getElementById("profilePage").classList.add("hidden");
-        document.getElementById("loginPage").classList.remove("hidden");
-        hideError();
-      });
-
-      // Initialize charts on load
-      window.addEventListener("resize", () => {
-        // Regenerate charts on window resize
-        if (jwt) {
-          setTimeout(() => {
-            loadProfile();
-          }, 100);
-        }
-      });
-    </script>
+    <!-- Scripts -->
+    <script src="js/utils.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/charts.js"></script>
+    <script src="js/profile.js"></script>
   </body>
 </html>
