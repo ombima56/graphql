@@ -470,14 +470,35 @@
           .reduce((sum, t) => sum + (t.amount || 0), 0);
 
         if (upTotal > 0 || downTotal > 0) {
-          const ratio =
-            upTotal > 0
-              ? ((upTotal / (upTotal + downTotal)) * 100).toFixed(1)
-              : 0;
-          auditRatioDiv.innerHTML = `${ratio}<span class="text-lg">%</span>`;
+          // Format the values in B, KB, or MB
+          const upFormatted = formatDataSize(upTotal);
+          const downFormatted = formatDataSize(downTotal);
+          
+          // Create HTML with both values
+          auditRatioDiv.innerHTML = `
+            <div class="flex flex-col">
+              <span class="text-2xl font-bold text-green-500">${upFormatted}</span>
+              <span class="text-sm text-slate-500 mt-1">Received</span>
+            </div>
+            <div class="flex flex-col mt-2">
+              <span class="text-2xl font-bold text-blue-500">${downFormatted}</span>
+              <span class="text-sm text-slate-500 mt-1">Given</span>
+            </div>
+          `;
         } else {
           auditRatioDiv.innerHTML =
             '<span class="text-base text-slate-500">No audit data</span>';
+        }
+      }
+
+      // Helper function to format data size in B, KB, or MB
+      function formatDataSize(bytes) {
+        if (bytes >= 1000000) {
+          return `${(bytes / 1000000).toFixed(2)} MB`;
+        } else if (bytes >= 1000) {
+          return `${(bytes / 1000).toFixed(1)} KB`;
+        } else {
+          return `${bytes} B`;
         }
       }
 
