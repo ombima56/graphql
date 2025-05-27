@@ -3,10 +3,12 @@ function formatDataSize(bytes) {
   if (bytes === 0) return "0 B";
   
   const k = 1000;
-  const sizes = ['B', 'KB', 'MB'];
+  const sizes = ['B', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  // Format with 1 decimal place for KB, 2 for MB/GB
+  const decimals = i === 1 ? 1 : 2;
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(decimals) + ' ' + sizes[i]);
 }
 
 // Toggle dark mode
