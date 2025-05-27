@@ -79,7 +79,6 @@ async function loadProfile() {
 }
 
 // Process transactions for XP and audit data
-// Process transactions for XP and audit data
 function processTransactions(transactions) {
   if (!transactions || transactions.length === 0) return;
 
@@ -169,7 +168,20 @@ function displayAuditRatio(upTransactions = [], downTransactions = []) {
   const givenXP = downTransactions.reduce((sum, t) => sum + Math.abs(t.amount || 0), 0);
 
   // Calculate ratio (protect against division by zero)
-  const ratio = givenXP > 0 ? (receivedXP / givenXP).toFixed(2) : receivedXP > 0 ? "∞" : "0.00";
+  let ratio;
+  if (givenXP > 0) {
+    ratio = (receivedXP / givenXP).toFixed(1);
+  } else {
+    ratio = receivedXP > 0 ? "∞" : "0.0";
+  }
+
+  // Format values in B/KB/MB with different decimal places
+  const formatReceivedGiven = (value) => {
+    if (value === 0) return "0 B";
+    if (value < 1000) return `${value.toFixed(0)} B`;
+    if (value < 1000000) return `${(value/1000).toFixed(2)} KB`;
+    return `${(value/1000000).toFixed(2)} MB`;
+  };
 
   auditRatioDiv.innerHTML = `
     <div class="space-y-3">
@@ -179,15 +191,16 @@ function displayAuditRatio(upTransactions = [], downTransactions = []) {
       </div>
       <div class="flex justify-between items-center">
         <span class="text-sm text-slate-500">Received:</span>
-        <span class="text-sm font-medium text-green-500">${formatDataSize(receivedXP)}</span>
+        <span class="text-sm font-medium text-green-500">${formatReceivedGiven(receivedXP)}</span>
       </div>
       <div class="flex justify-between items-center">
         <span class="text-sm text-slate-500">Given:</span>
-        <span class="text-sm font-medium text-blue-500">${formatDataSize(givenXP)}</span>
+        <span class="text-sm font-medium text-blue-500">${formatReceivedGiven(givenXP)}</span>
       </div>
     </div>
   `;
 }
+
 // Helper function for ratio color coding
 function getRatioColorClass(ratio) {
   const numRatio = parseFloat(ratio);
