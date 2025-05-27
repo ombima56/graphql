@@ -78,14 +78,25 @@ function showProfile() {
 // Show error message
 function showError(message) {
   const errorDiv = document.getElementById("errorMessage");
+  if (!errorDiv) {
+    console.error("Error message div not found in DOM");
+    return;
+  }
   errorDiv.textContent = message;
   errorDiv.classList.remove("hidden");
+  
+  // Auto-hide after 5 seconds
+  setTimeout(() => {
+    hideError();
+  }, 5000);
 }
 
 // Hide error message
 function hideError() {
   const errorDiv = document.getElementById("errorMessage");
-  errorDiv.classList.add("hidden");
+  if (errorDiv) {
+    errorDiv.classList.add("hidden");
+  }
 }
 
 // Initialize UI
@@ -127,3 +138,10 @@ window.addEventListener("resize", () => {
     }
   }, 250);
 });
+
+function formatNumber(value) {
+  return parseFloat(value).toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+}
