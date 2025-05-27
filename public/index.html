@@ -448,7 +448,16 @@
           (sum, t) => sum + (t.amount || 0),
           0
         );
-        totalXPDiv.innerHTML = `${totalXP.toLocaleString()}<span class="text-lg"> kB</span>`;
+        
+        // Format the XP value using the formatDataSize function
+        const formattedXP = formatDataSize(totalXP);
+        
+        // Display the formatted XP value
+        totalXPDiv.innerHTML = `
+          <div class="flex items-center justify-center">
+            <span class="text-3xl font-bold">${formattedXP}</span>
+          </div>
+        `;
       }
 
       // Display audit ratio
