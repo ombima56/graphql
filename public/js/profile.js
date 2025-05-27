@@ -14,15 +14,13 @@ async function loadProfile() {
         }
       }
     `;
-
-    const userData = await graphqlQuery(userQuery);
-
+    const userData = await graphqlQuery(userQuery); // Assumes graphqlQuery is defined
     if (userData && userData.user) {
       const user = Array.isArray(userData.user) ? userData.user[0] : userData.user;
-      displayUserInfo(user);
+      displayUserInfo(user); // Assumes displayUserInfo is defined
     }
 
-    // Single query for all transactions
+    // Query for all transactions (could be used for audit ratio or other calculations)
     const transactionsQuery = `
       query {
         transaction(order_by: {createdAt: desc}) {
@@ -34,14 +32,12 @@ async function loadProfile() {
         }
       }
     `;
-
     const transactionsData = await graphqlQuery(transactionsQuery);
-    
     if (transactionsData && transactionsData.transaction) {
-      processTransactions(transactionsData.transaction);
+      processTransactions(transactionsData.transaction); // Assumes processTransactions is defined
     }
 
-    // Query for progress/results
+    // Query for progress/results (used for results chart and recent activity)
     const progressQuery = `
       query {
         progress(order_by: {createdAt: desc}) {
@@ -58,15 +54,13 @@ async function loadProfile() {
         }
       }
     `;
-
     const progressData = await graphqlQuery(progressQuery);
-    
     if (progressData && progressData.progress) {
-      generateResultsChart(progressData.progress);
-      displayRecentActivity(progressData.progress);
+      generateResultsChart(progressData.progress); // Assumes generateResultsChart is defined
+      displayRecentActivity(progressData.progress); // Assumes displayRecentActivity is defined
     }
 
-    // Query specifically for valid XP transactions
+    // Query specifically for XP-related transactions (used for XP card and XP chart)
     const xpQuery = `
       query {
         transaction(
@@ -74,8 +68,7 @@ async function loadProfile() {
             _or: [
               { type: { _eq: "xp" } },
               { type: { _eq: "skill" } },
-              { type: { _eq: "level" } },
-              { amount: { _gt: 0 } }
+              { type: { _eq: "level" } }
             ]
           },
           order_by: { createdAt: desc }
@@ -88,22 +81,24 @@ async function loadProfile() {
         }
       }
     `;
-
     const xpData = await graphqlQuery(xpQuery);
-    
     if (xpData && xpData.transaction) {
-      displayXPInfo(xpData.transaction);
+      const positiveXpTransactions = xpData.transaction.filter(t => t.amount > 0 && (t.type === "xp" || t.type === "skill" || t.type === "level"));
+      displayXPInfo(positiveXpTransactions);
       generateXPChart(xpData.transaction);
+    } else {
+      displayXPInfo([]);
     }
 
   } catch (error) {
     console.error("Error loading profile:", error);
     showError("Failed to load profile data. Please try again.");
     
-    if (error.message.includes("NetworkError")) {
-      showError("Network error. Please check your connection.");
+    // More specific error messages based on error type
+    if (error.message.includes("NetworkError") || (error.cause && error.cause.message.includes("Failed to fetch"))) {
+      showError("Network error. Please check your connection and the GraphQL endpoint.");
     } else if (error.message.includes("GraphQL error")) {
-      showError("Data loading error. Please refresh the page.");
+      showError("Data loading error from GraphQL. Please refresh or check query.");
     }
   }
 }
@@ -166,49 +161,66 @@ function displayUserInfo(user) {
 
 // Display XP info dynamically
 function displayXPInfo(transactions) {
+  // Get references to the HTML elements for different XP states
   const totalXPLoading = document.getElementById("totalXPLoading");
   const totalXPDataView = document.getElementById("totalXPDataView");
   const noXPDataView = document.getElementById("noXPDataView");
 
-  // Ensure all view elements are found
+  // Defensive check: Ensure all required view elements are present in the DOM
   if (!totalXPLoading || !totalXPDataView || !noXPDataView) {
-    console.error("One or more XP view elements (totalXPLoading, totalXPDataView, noXPDataView) not found in the DOM.");
+    console.error("Critical XP display elements (totalXPLoading, totalXPDataView, or noXPDataView) are missing from the DOM. Cannot update XP info.");
+    const xpCardTitle = document.querySelector('#totalXP').closest('div').querySelector('h2');
+    if(xpCardTitle) xpCardTitle.insertAdjacentHTML('afterend', '<p class="text-red-500 text-sm">Error: XP display components missing.</p>');
     return;
   }
   
-  // Hide loading state first
+  // Always hide the loading spinner first
   totalXPLoading.classList.add("hidden");
 
+  // Check if there are valid transactions to display
   if (!transactions || transactions.length === 0) {
     totalXPDataView.classList.add("hidden");
-    noXPDataView.classList.remove("hidden"); 
+    noXPDataView.classList.remove("hidden");
     return;
   }
 
-  // Data is available, show data view and hide no-data view
+  // If data is available, show the data view and hide the "no data" message
   totalXPDataView.classList.remove("hidden");
   noXPDataView.classList.add("hidden");
 
-  const totalXP = transactions.reduce((sum, t) => sum + (t.amount || 0), 0);
+  // Calculate total XP from transactions (ensure amount is a number)
+  const totalXP = transactions.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
   const formattedXP = formatDataSize(totalXP);
   
   const currentDate = new Date();
   const thirtyDaysAgo = new Date(currentDate);
-  thirtyDaysAgo.setDate(currentDate.getDate() - 30);
+  thirtyDaysAgo.setDate(currentDate.getDate() - 30); 
   
-  const recentXP = transactions
-    .filter(t => new Date(t.createdAt) > thirtyDaysAgo)
-    .reduce((sum, t) => sum + (t.amount || 0), 0);
-  const xpPerDay = (recentXP / 30).toFixed(1);
+  const recentXPTransactions = transactions.filter(t => new Date(t.createdAt) > thirtyDaysAgo);
+  const recentXPSum = recentXPTransactions.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+  const xpPerDay = (recentXPSum / 30).toFixed(1);
 
-  // Update elements by ID with new data
   const xpValueEl = document.getElementById("xpValue");
   const xpTransactionsEl = document.getElementById("xpTransactions");
   const xpPerDayEl = document.getElementById("xpPerDay");
 
-  if (xpValueEl) xpValueEl.textContent = formattedXP;
-  if (xpTransactionsEl) xpTransactionsEl.textContent = transactions.length;
-  if (xpPerDayEl) xpPerDayEl.textContent = xpPerDay;
+  if (xpValueEl) {
+    xpValueEl.textContent = formattedXP;
+  } else {
+    console.warn("Element with ID 'xpValue' not found.");
+  }
+
+  if (xpTransactionsEl) {
+    xpTransactionsEl.textContent = transactions.length;
+  } else {
+    console.warn("Element with ID 'xpTransactions' not found.");
+  }
+
+  if (xpPerDayEl) {
+    xpPerDayEl.textContent = xpPerDay;
+  } else {
+    console.warn("Element with ID 'xpPerDay' not found.");
+  }
 }
 
 function displayAuditRatio(upTransactions = [], downTransactions = []) {
