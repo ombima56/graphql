@@ -66,6 +66,36 @@ async function loadProfile() {
       displayRecentActivity(progressData.progress);
     }
 
+    // Query specifically for valid XP transactions
+    const xpQuery = `
+      query {
+        transaction(
+          where: {
+            _or: [
+              { type: { _eq: "xp" } },
+              { type: { _eq: "skill" } },
+              { type: { _eq: "level" } },
+              { amount: { _gt: 0 } }
+            ]
+          },
+          order_by: { createdAt: desc }
+        ) {
+          id
+          type
+          amount
+          createdAt
+          path
+        }
+      }
+    `;
+
+    const xpData = await graphqlQuery(xpQuery);
+    
+    if (xpData && xpData.transaction) {
+      displayXPInfo(xpData.transaction);
+      generateXPChart(xpData.transaction);
+    }
+
   } catch (error) {
     console.error("Error loading profile:", error);
     showError("Failed to load profile data. Please try again.");
@@ -136,28 +166,49 @@ function displayUserInfo(user) {
 
 // Display XP info dynamically
 function displayXPInfo(transactions) {
-  const totalXPDiv = document.getElementById("totalXP");
+  const totalXPLoading = document.getElementById("totalXPLoading");
+  const totalXPDataView = document.getElementById("totalXPDataView");
+  const noXPDataView = document.getElementById("noXPDataView");
+
+  // Ensure all view elements are found
+  if (!totalXPLoading || !totalXPDataView || !noXPDataView) {
+    console.error("One or more XP view elements (totalXPLoading, totalXPDataView, noXPDataView) not found in the DOM.");
+    return;
+  }
+  
+  // Hide loading state first
+  totalXPLoading.classList.add("hidden");
 
   if (!transactions || transactions.length === 0) {
-    totalXPDiv.innerHTML = '<span class="text-base text-slate-500">No XP data available</span>';
+    totalXPDataView.classList.add("hidden");
+    noXPDataView.classList.remove("hidden"); 
     return;
   }
 
-  // Calculate total XP from all transactions
+  // Data is available, show data view and hide no-data view
+  totalXPDataView.classList.remove("hidden");
+  noXPDataView.classList.add("hidden");
+
   const totalXP = transactions.reduce((sum, t) => sum + (t.amount || 0), 0);
-  
-  // Format the XP value using the formatDataSize function
   const formattedXP = formatDataSize(totalXP);
   
-  // Display the formatted XP value with additional info
-  totalXPDiv.innerHTML = `
-    <div class="flex items-center justify-center">
-      <div class="text-center">
-        <span class="text-3xl font-bold">${formattedXP}</span>
-        <div class="text-sm text-slate-500 mt-1">${transactions.length} transactions</div>
-      </div>
-    </div>
-  `;
+  const currentDate = new Date();
+  const thirtyDaysAgo = new Date(currentDate);
+  thirtyDaysAgo.setDate(currentDate.getDate() - 30);
+  
+  const recentXP = transactions
+    .filter(t => new Date(t.createdAt) > thirtyDaysAgo)
+    .reduce((sum, t) => sum + (t.amount || 0), 0);
+  const xpPerDay = (recentXP / 30).toFixed(1);
+
+  // Update elements by ID with new data
+  const xpValueEl = document.getElementById("xpValue");
+  const xpTransactionsEl = document.getElementById("xpTransactions");
+  const xpPerDayEl = document.getElementById("xpPerDay");
+
+  if (xpValueEl) xpValueEl.textContent = formattedXP;
+  if (xpTransactionsEl) xpTransactionsEl.textContent = transactions.length;
+  if (xpPerDayEl) xpPerDayEl.textContent = xpPerDay;
 }
 
 function displayAuditRatio(upTransactions = [], downTransactions = []) {
