@@ -1,14 +1,12 @@
-// Format data size (bytes, KB, MB)
-function formatDataSize(value) {
-  if (value === 0) return "0";
+// Format data size with decimal scaling (bytes, KB, MB)
+function formatDataSize(bytes) {
+  if (bytes === 0) return "0 B";
   
-  if (value < 1000) {
-    return value.toString();
-  } else if (value < 1000000) {
-    return (value / 1000).toFixed(1) + "K";
-  } else {
-    return (value / 1000000).toFixed(1) + "M";
-  }
+  const k = 1000;
+  const sizes = ['B', 'KB', 'MB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
 }
 
 // Toggle dark mode
