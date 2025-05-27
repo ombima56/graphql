@@ -22,7 +22,7 @@ async function loadProfile() {
       displayUserInfo(user);
     }
 
-    // Query for transactions (both XP and audits)
+    // Single query for all transactions
     const transactionsQuery = `
       query {
         transaction(order_by: {createdAt: desc}) {
@@ -38,7 +38,6 @@ async function loadProfile() {
     const transactionsData = await graphqlQuery(transactionsQuery);
     
     if (transactionsData && transactionsData.transaction) {
-      // Process all transactions for XP and audit data
       processTransactions(transactionsData.transaction);
     }
 
@@ -69,10 +68,17 @@ async function loadProfile() {
 
   } catch (error) {
     console.error("Error loading profile:", error);
-    showError("Failed to load profile data");
+    showError("Failed to load profile data. Please try again.");
+    
+    if (error.message.includes("NetworkError")) {
+      showError("Network error. Please check your connection.");
+    } else if (error.message.includes("GraphQL error")) {
+      showError("Data loading error. Please refresh the page.");
+    }
   }
 }
 
+// Process transactions for XP and audit data
 // Process transactions for XP and audit data
 function processTransactions(transactions) {
   if (!transactions || transactions.length === 0) return;
@@ -82,9 +88,12 @@ function processTransactions(transactions) {
   displayXPInfo(xpTransactions);
   generateXPChart(xpTransactions);
 
-  // Audit transactions are those with negative amounts
-  const auditTransactions = transactions.filter(t => t.amount < 0);
-  displayAuditRatio(auditTransactions);
+  // Separate audit transactions into up and down
+  const auditTransactions = transactions.filter(t => t.type === 'up' || t.type === 'down');
+  const upTransactions = auditTransactions.filter(t => t.type === 'up');
+  const downTransactions = auditTransactions.filter(t => t.type === 'down');
+  
+  displayAuditRatio(upTransactions, downTransactions);
 }
 
 // Display user info dynamically
@@ -152,33 +161,39 @@ function displayXPInfo(transactions) {
   `;
 }
 
-// Display audit ratio dynamically
-function displayAuditRatio(transactions) {
+function displayAuditRatio(upTransactions = [], downTransactions = []) {
   const auditRatioDiv = document.getElementById("auditRatio");
 
-  if (!transactions || transactions.length === 0) {
-    auditRatioDiv.innerHTML = '<span class="text-base text-slate-500">No audit data available</span>';
-    return;
-  }
+  // Calculate totals (default to 0 if undefined)
+  const receivedXP = upTransactions.reduce((sum, t) => sum + (t.amount || 0), 0);
+  const givenXP = downTransactions.reduce((sum, t) => sum + Math.abs(t.amount || 0), 0);
 
-  // Calculate total audit points (using absolute values)
-  const totalAudits = transactions.reduce((sum, t) => sum + Math.abs(t.amount || 0), 0);
-  
-  // Calculate ratio (for display purposes, we'll just show the count)
-  const ratio = transactions.length > 0 ? (totalAudits / transactions.length).toFixed(1) : "0.0";
-  
+  // Calculate ratio (protect against division by zero)
+  const ratio = givenXP > 0 ? (receivedXP / givenXP).toFixed(2) : receivedXP > 0 ? "∞" : "0.00";
+
   auditRatioDiv.innerHTML = `
     <div class="space-y-3">
       <div class="flex justify-between items-center">
-        <span class="text-sm text-slate-500">Audits:</span>
-        <span class="text-xl font-bold text-purple-500">${transactions.length}</span>
+        <span class="text-sm text-slate-500">Audit Ratio:</span>
+        <span class="text-xl font-bold ${getRatioColorClass(ratio)}">${ratio}</span>
       </div>
       <div class="flex justify-between items-center">
-        <span class="text-sm text-slate-500">Points:</span>
-        <span class="text-lg font-bold text-blue-500">${formatDataSize(totalAudits)}</span>
+        <span class="text-sm text-slate-500">Received:</span>
+        <span class="text-sm font-medium text-green-500">${formatDataSize(receivedXP)}</span>
+      </div>
+      <div class="flex justify-between items-center">
+        <span class="text-sm text-slate-500">Given:</span>
+        <span class="text-sm font-medium text-blue-500">${formatDataSize(givenXP)}</span>
       </div>
     </div>
   `;
+}
+// Helper function for ratio color coding
+function getRatioColorClass(ratio) {
+  const numRatio = parseFloat(ratio);
+  if (numRatio >= 1.0) return 'text-green-500';
+  if (numRatio >= 0.5) return 'text-yellow-500';
+  return 'text-red-500';
 }
 
 // Display recent activity dynamically
