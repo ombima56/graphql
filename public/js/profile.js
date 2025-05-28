@@ -373,25 +373,31 @@ function displayRecentActivity(activities) {
     let projectName =
       activity.object?.name || activity.path || "Unknown project";
 
-    // Determine pass/fail status
-    const isPassed = activity.grade > 0;
-    const statusText = isPassed ? "PASS" : "FAIL";
+    // Determine status
+    let statusText, statusClass, borderClass;
+    if (activity.grade > 0) {
+      statusText = "PASS";
+      statusClass = "bg-green-100 text-green-800";
+      borderClass = "border-green-500";
+    } else if (activity.grade < 0) {
+      statusText = "FAIL";
+      statusClass = "bg-red-100 text-red-800";
+      borderClass = "border-red-500";
+    } else {
+      statusText = "IN PROGRESS";
+      statusClass = "bg-yellow-100 text-yellow-800";
+      borderClass = "border-yellow-500";
+    }
 
     html += `
-      <div class="border-l-4 ${
-        isPassed ? "border-green-500" : "border-red-500"
-      } pl-4 py-2">
+      <div class="border-l-4 ${borderClass} pl-4 py-2">
         <div class="flex justify-between items-start">
           <div>
             <p class="font-bold">${projectName}</p>
             <p class="text-xs text-slate-500">${date}</p>
           </div>
           <div class="text-right">
-            <span class="px-2 py-1 rounded text-xs ${
-              isPassed
-                ? "bg-green-100 text-green-800"
-                : "bg-red-100 text-red-800"
-            }">${statusText}</span>
+            <span class="px-2 py-1 rounded text-xs ${statusClass}">${statusText}</span>
           </div>
         </div>
       </div>
