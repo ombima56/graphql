@@ -14,9 +14,7 @@ function showChart(chartId) {
   const activeButton = Array.from(buttons).find((btn) =>
     btn.textContent
       .trim()
-      .includes(
-        chartId === "xpProgress" ? "XP PROGRESS" : "PROJECT RESULTS"
-      )
+      .includes(chartId === "xpProgress" ? "XP PROGRESS" : "PROJECT RESULTS")
   );
 
   if (activeButton) {
@@ -32,7 +30,7 @@ function generateXPChart(transactions) {
 
   if (!transactions || transactions.length === 0) {
     svg.innerHTML =
-      '<text x="50%" y="50%" text-anchor="middle" class="text-slate-500">No XP data available</text>';
+      '<text x="50%" y="50%" text-anchor="middle" class="text-slate-500 dark:text-slate-400">No XP data available</text>';
     return;
   }
 
@@ -45,9 +43,20 @@ function generateXPChart(transactions) {
     (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
   );
 
+  // Calculate cumulative XP
+  let cumulativeXP = 0;
+  const xpOverTime = sortedData.map((t) => {
+    cumulativeXP += t.amount || 0;
+    return {
+      date: new Date(t.createdAt),
+      xp: cumulativeXP,
+      type: t.type,
+    };
+  });
+
   // Group by month
-  const monthlyData = sortedData.reduce((acc, t) => {
-    const date = new Date(t.createdAt);
+  const monthlyData = xpOverTime.reduce((acc, t) => {
+    const date = t.date;
     const monthYear = `${date.getFullYear()}-${date.getMonth() + 1}`;
 
     if (!acc[monthYear]) {
@@ -57,11 +66,14 @@ function generateXPChart(transactions) {
           month: "short",
           year: "numeric",
         }),
-        amount: 0,
+        amount: t.xp,
+        date: date,
+        type: t.type,
       };
+    } else {
+      acc[monthYear].amount = t.xp; // Keep the latest cumulative XP for the month
     }
 
-    acc[monthYear].amount += t.amount || 0;
     return acc;
   }, {});
 
@@ -73,10 +85,7 @@ function generateXPChart(transactions) {
     (width - padding.left - padding.right) / dataPoints.length - 10;
 
   // Draw axes
-  const xAxis = document.createElementNS(
-    "http://www.w3.org/2000/svg",
-    "line"
-  );
+  const xAxis = document.createElementNS("http://www.w3.org/2000/svg", "line");
   xAxis.setAttribute("x1", padding.left);
   xAxis.setAttribute("y1", height - padding.bottom);
   xAxis.setAttribute("x2", width - padding.right);
@@ -85,10 +94,7 @@ function generateXPChart(transactions) {
   xAxis.setAttribute("stroke-width", "2");
   svg.appendChild(xAxis);
 
-  const yAxis = document.createElementNS(
-    "http://www.w3.org/2000/svg",
-    "line"
-  );
+  const yAxis = document.createElementNS("http://www.w3.org/2000/svg", "line");
   yAxis.setAttribute("x1", padding.left);
   yAxis.setAttribute("y1", padding.top);
   yAxis.setAttribute("x2", padding.left);
@@ -128,10 +134,7 @@ function generateXPChart(transactions) {
     const y = height - padding.bottom - barHeight;
 
     // Bar
-    const bar = document.createElementNS(
-      "http://www.w3.org/2000/svg",
-      "rect"
-    );
+    const bar = document.createElementNS("http://www.w3.org/2000/svg", "rect");
     bar.setAttribute("x", x);
     bar.setAttribute("y", y);
     bar.setAttribute("width", barWidth);
@@ -171,10 +174,7 @@ function generateXPChart(transactions) {
       tooltipText.setAttribute("text-anchor", "middle");
       tooltipText.setAttribute("fill", "white");
       tooltipText.setAttribute("font-size", "12");
-      tooltipText.setAttribute(
-        "font-family",
-        "JetBrains Mono, monospace"
-      );
+      tooltipText.setAttribute("font-family", "JetBrains Mono, monospace");
       tooltipText.textContent = `${point.amount.toLocaleString()} XP`;
 
       tooltip.appendChild(tooltipRect);
@@ -233,23 +233,28 @@ function generateResultsChart(data) {
   svg.innerHTML = "";
 
   if (!data || data.length === 0) {
-    svg.innerHTML = '<text x="50%" y="50%" text-anchor="middle" fill="#64748b" font-family="JetBrains Mono, monospace">No project data available</text>';
+    svg.innerHTML =
+      '<text x="50%" y="50%" text-anchor="middle" class="text-slate-500 dark:text-slate-400">No project data available</text>';
     return;
   }
 
-  // Count pass/fail results
-  const passCount = data.filter((item) => item.grade > 0).length;
-  const failCount = data.filter((item) => item.grade === 0).length;
-  const total = passCount + failCount;
+  // Categorize projects
+  const projects = {
+    passed: data.filter((p) => p.grade > 0),
+    failed: data.filter((p) => p.grade < 0),
+    inProgress: data.filter((p) => p.grade === 0),
+  };
 
-  if (total === 0) {
-    svg.innerHTML = '<text x="50%" y="50%" text-anchor="middle" fill="#64748b" font-family="JetBrains Mono, monospace">No project results available</text>';
+  const totalProjects = data.length;
+  const passedCount = projects.passed.length;
+  const failedCount = projects.failed.length;
+  const inProgressCount = projects.inProgress.length;
+
+  if (totalProjects === 0) {
+    svg.innerHTML =
+      '<text x="50%" y="50%" text-anchor="middle" class="text-slate-500 dark:text-slate-400">No project results available</text>';
     return;
   }
-
-  // Calculate percentages
-  const passPercentage = Math.round((passCount / total) * 100);
-  const failPercentage = Math.round((failCount / total) * 100);
 
   // SVG dimensions
   const width = svg.clientWidth;
@@ -259,116 +264,195 @@ function generateResultsChart(data) {
   const radius = Math.min(width, height) / 3;
 
   // Create a group for the entire chart
-  const chartGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  const chartGroup = document.createElementNS(
+    "http://www.w3.org/2000/svg",
+    "g"
+  );
   chartGroup.setAttribute("transform", `translate(${centerX}, ${centerY})`);
 
-  // Create the pie chart
-  const pie = document.createElementNS("http://www.w3.org/2000/svg", "g");
-  
-  // Calculate angles
-  const passAngle = (passCount / total) * 2 * Math.PI;
-  const startAngle = -Math.PI / 2; // Start at the top
-  
-  // Create the passed slice (green)
-  if (passCount > 0) {
-    const passPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    const passEndAngle = startAngle + passAngle;
-    
-    const x1 = radius * Math.cos(startAngle);
-    const y1 = radius * Math.sin(startAngle);
-    const x2 = radius * Math.cos(passEndAngle);
-    const y2 = radius * Math.sin(passEndAngle);
-    
-    const largeArcFlag = passAngle > Math.PI ? 1 : 0;
-    
-    const passPathData = [
+  // Calculate angles for each segment
+  const passedAngle = (passedCount / totalProjects) * 2 * Math.PI;
+  const failedAngle = (failedCount / totalProjects) * 2 * Math.PI;
+  const inProgressAngle = (inProgressCount / totalProjects) * 2 * Math.PI;
+
+  let currentAngle = -Math.PI / 2; // Start at the top
+
+  // Draw passed segment (green)
+  if (passedCount > 0) {
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    const endAngle = currentAngle + passedAngle;
+
+    const x1 = radius * Math.cos(currentAngle);
+    const y1 = radius * Math.sin(currentAngle);
+    const x2 = radius * Math.cos(endAngle);
+    const y2 = radius * Math.sin(endAngle);
+
+    const largeArcFlag = passedAngle > Math.PI ? 1 : 0;
+
+    const pathData = [
       `M 0 0`,
       `L ${x1} ${y1}`,
       `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`,
-      `Z`
+      `Z`,
     ].join(" ");
-    
-    passPath.setAttribute("d", passPathData);
-    passPath.setAttribute("fill", "#10b981");
-    passPath.setAttribute("stroke", "white");
-    passPath.setAttribute("stroke-width", "2");
-    pie.appendChild(passPath);
+
+    path.setAttribute("d", pathData);
+    path.setAttribute("fill", "#10b981");
+    path.setAttribute("stroke", "white");
+    path.setAttribute("stroke-width", "2");
+    chartGroup.appendChild(path);
+
+    currentAngle += passedAngle;
   }
-  
-  // Create the failed slice (red)
-  if (failCount > 0) {
-    const failPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    const failStartAngle = startAngle + passAngle;
-    const failEndAngle = startAngle + 2 * Math.PI;
-    
-    const x1 = radius * Math.cos(failStartAngle);
-    const y1 = radius * Math.sin(failStartAngle);
-    const x2 = radius * Math.cos(failEndAngle);
-    const y2 = radius * Math.sin(failEndAngle);
-    
-    const largeArcFlag = (2 * Math.PI - passAngle) > Math.PI ? 1 : 0;
-    
-    const failPathData = [
+
+  // Draw failed segment (red)
+  if (failedCount > 0) {
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    const endAngle = currentAngle + failedAngle;
+
+    const x1 = radius * Math.cos(currentAngle);
+    const y1 = radius * Math.sin(currentAngle);
+    const x2 = radius * Math.cos(endAngle);
+    const y2 = radius * Math.sin(endAngle);
+
+    const largeArcFlag = failedAngle > Math.PI ? 1 : 0;
+
+    const pathData = [
       `M 0 0`,
       `L ${x1} ${y1}`,
       `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`,
-      `Z`
+      `Z`,
     ].join(" ");
-    
-    failPath.setAttribute("d", failPathData);
-    failPath.setAttribute("fill", "#ef4444");
-    failPath.setAttribute("stroke", "white");
-    failPath.setAttribute("stroke-width", "2");
-    pie.appendChild(failPath);
+
+    path.setAttribute("d", pathData);
+    path.setAttribute("fill", "#ef4444");
+    path.setAttribute("stroke", "white");
+    path.setAttribute("stroke-width", "2");
+    chartGroup.appendChild(path);
+
+    currentAngle += failedAngle;
   }
-  
-  chartGroup.appendChild(pie);
+
+  // Draw in progress segment (yellow)
+  if (inProgressCount > 0) {
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    const endAngle = currentAngle + inProgressAngle;
+
+    const x1 = radius * Math.cos(currentAngle);
+    const y1 = radius * Math.sin(currentAngle);
+    const x2 = radius * Math.cos(endAngle);
+    const y2 = radius * Math.sin(endAngle);
+
+    const largeArcFlag = inProgressAngle > Math.PI ? 1 : 0;
+
+    const pathData = [
+      `M 0 0`,
+      `L ${x1} ${y1}`,
+      `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`,
+      `Z`,
+    ].join(" ");
+
+    path.setAttribute("d", pathData);
+    path.setAttribute("fill", "#f59e0b");
+    path.setAttribute("stroke", "white");
+    path.setAttribute("stroke-width", "2");
+    chartGroup.appendChild(path);
+  }
+
   svg.appendChild(chartGroup);
-  
+
   // Add legend
-  const legendGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  const legendGroup = document.createElementNS(
+    "http://www.w3.org/2000/svg",
+    "g"
+  );
   legendGroup.setAttribute("transform", `translate(${width - 120}, 30)`);
-  
-  // Pass legend item
-  const passRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+
+  // Passed legend item
+  const passRect = document.createElementNS(
+    "http://www.w3.org/2000/svg",
+    "rect"
+  );
   passRect.setAttribute("x", "0");
   passRect.setAttribute("y", "0");
   passRect.setAttribute("width", "15");
   passRect.setAttribute("height", "15");
   passRect.setAttribute("fill", "#10b981");
   legendGroup.appendChild(passRect);
-  
-  const passText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+
+  const passText = document.createElementNS(
+    "http://www.w3.org/2000/svg",
+    "text"
+  );
   passText.setAttribute("x", "25");
   passText.setAttribute("y", "12");
   passText.setAttribute("font-size", "12");
   passText.setAttribute("font-family", "JetBrains Mono, monospace");
   passText.setAttribute("fill", "#64748b");
-  passText.textContent = `PASS (${passPercentage}%)`;
+  passText.textContent = `PASS (${Math.round(
+    (passedCount / totalProjects) * 100
+  )}%)`;
   legendGroup.appendChild(passText);
-  
-  // Fail legend item
-  const failRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+
+  // Failed legend item
+  const failRect = document.createElementNS(
+    "http://www.w3.org/2000/svg",
+    "rect"
+  );
   failRect.setAttribute("x", "0");
   failRect.setAttribute("y", "25");
   failRect.setAttribute("width", "15");
   failRect.setAttribute("height", "15");
   failRect.setAttribute("fill", "#ef4444");
   legendGroup.appendChild(failRect);
-  
-  const failText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+
+  const failText = document.createElementNS(
+    "http://www.w3.org/2000/svg",
+    "text"
+  );
   failText.setAttribute("x", "25");
   failText.setAttribute("y", "37");
   failText.setAttribute("font-size", "12");
   failText.setAttribute("font-family", "JetBrains Mono, monospace");
   failText.setAttribute("fill", "#64748b");
-  failText.textContent = `FAIL (${failPercentage}%)`;
+  failText.textContent = `FAIL (${Math.round(
+    (failedCount / totalProjects) * 100
+  )}%)`;
   legendGroup.appendChild(failText);
-  
+
+  // In Progress legend item
+  const progressRect = document.createElementNS(
+    "http://www.w3.org/2000/svg",
+    "rect"
+  );
+  progressRect.setAttribute("x", "0");
+  progressRect.setAttribute("y", "50");
+  progressRect.setAttribute("width", "15");
+  progressRect.setAttribute("height", "15");
+  progressRect.setAttribute("fill", "#f59e0b");
+  legendGroup.appendChild(progressRect);
+
+  const progressText = document.createElementNS(
+    "http://www.w3.org/2000/svg",
+    "text"
+  );
+  progressText.setAttribute("x", "25");
+  progressText.setAttribute("y", "62");
+  progressText.setAttribute("font-size", "12");
+  progressText.setAttribute("font-family", "JetBrains Mono, monospace");
+  progressText.setAttribute("fill", "#64748b");
+  progressText.textContent = `IN PROGRESS (${Math.round(
+    (inProgressCount / totalProjects) * 100
+  )}%)`;
+  legendGroup.appendChild(progressText);
+
   svg.appendChild(legendGroup);
-  
+
   // Add total count in the center
-  const totalText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+  const totalText = document.createElementNS(
+    "http://www.w3.org/2000/svg",
+    "text"
+  );
   totalText.setAttribute("x", centerX);
   totalText.setAttribute("y", centerY);
   totalText.setAttribute("text-anchor", "middle");
@@ -376,28 +460,46 @@ function generateResultsChart(data) {
   totalText.setAttribute("font-weight", "bold");
   totalText.setAttribute("font-family", "JetBrains Mono, monospace");
   totalText.setAttribute("fill", "#1e293b");
-  totalText.textContent = `${total} Projects`;
+  totalText.textContent = `${totalProjects} Projects`;
   svg.appendChild(totalText);
-  
-  // Add pass count below
-  const passCountText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+
+  // Add counts below
+  const passCountText = document.createElementNS(
+    "http://www.w3.org/2000/svg",
+    "text"
+  );
   passCountText.setAttribute("x", centerX);
   passCountText.setAttribute("y", centerY + 25);
   passCountText.setAttribute("text-anchor", "middle");
   passCountText.setAttribute("font-size", "12");
   passCountText.setAttribute("font-family", "JetBrains Mono, monospace");
   passCountText.setAttribute("fill", "#10b981");
-  passCountText.textContent = `${passCount} Passed`;
+  passCountText.textContent = `${passedCount} Passed`;
   svg.appendChild(passCountText);
-  
-  // Add fail count below
-  const failCountText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+
+  const failCountText = document.createElementNS(
+    "http://www.w3.org/2000/svg",
+    "text"
+  );
   failCountText.setAttribute("x", centerX);
   failCountText.setAttribute("y", centerY + 45);
   failCountText.setAttribute("text-anchor", "middle");
   failCountText.setAttribute("font-size", "12");
   failCountText.setAttribute("font-family", "JetBrains Mono, monospace");
   failCountText.setAttribute("fill", "#ef4444");
-  failCountText.textContent = `${failCount} Failed`;
+  failCountText.textContent = `${failedCount} Failed`;
   svg.appendChild(failCountText);
+
+  const progressCountText = document.createElementNS(
+    "http://www.w3.org/2000/svg",
+    "text"
+  );
+  progressCountText.setAttribute("x", centerX);
+  progressCountText.setAttribute("y", centerY + 65);
+  progressCountText.setAttribute("text-anchor", "middle");
+  progressCountText.setAttribute("font-size", "12");
+  progressCountText.setAttribute("font-family", "JetBrains Mono, monospace");
+  progressCountText.setAttribute("fill", "#f59e0b");
+  progressCountText.textContent = `${inProgressCount} In Progress`;
+  svg.appendChild(progressCountText);
 }
