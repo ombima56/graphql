@@ -67,7 +67,7 @@ async function loadProfile() {
         transaction(
           where: {
             _or: [
-              { type: { _eq: "xp" } },
+              { type: { _eq: "xp" }, eventId: {_eq: 75} },
               { type: { _eq: "skill" } },
               { type: { _eq: "level" } }
             ]
