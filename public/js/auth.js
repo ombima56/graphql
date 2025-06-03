@@ -19,7 +19,6 @@ document.getElementById("logoutBtn").addEventListener("click", () => {
   window.location.href = "login.html";
 });
 
-// GraphQL query function
 async function graphqlQuery(query, variables = {}) {
   const jwt = localStorage.getItem("jwt");
   if (!jwt) {
@@ -28,51 +27,41 @@ async function graphqlQuery(query, variables = {}) {
   }
 
   try {
-    // Clean the token if needed
-    const cleanToken = jwt.replace(/^["'](.*)["']$/, "$1").trim();
-
     const response = await fetch(GRAPHQL_ENDPOINT, {
       method: "POST",
       headers: {
-        'Authorization': `Bearer ${cleanToken}`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest'
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${jwt}`,
       },
       body: JSON.stringify({ query, variables }),
     });
 
     if (!response.ok) {
-      console.error(`HTTP error ${response.status}: ${response.statusText}`);
       if (response.status === 401) {
+        // Token expired or invalid
         localStorage.removeItem("jwt");
-        window.location.href = "login.html";
+        window.location.href = "login.html?error=session_expired";
+        return null;
       }
-      return null;
+      throw new Error(`Network response was not ok: ${response.status}`);
     }
 
-    const data = await response.json();
-
-    if (data.errors) {
-      console.error("GraphQL errors:", data.errors);
-      const errorMessage = data.errors[0]?.message || "Unknown GraphQL error";
-      console.error("Error message:", errorMessage);
-
-      if (
-        errorMessage.includes("JWT") ||
-        errorMessage.includes("token") ||
-        errorMessage.includes("auth")
-      ) {
-        localStorage.removeItem("jwt");
-        window.location.href = "login.html";
-      }
-
+    const result = await response.json();
+    
+    if (result.errors) {
+      // Handle GraphQL specific errors
+      const errorMessage = result.errors.map(e => e.message).join(', ');
+      console.error("GraphQL errors:", result.errors);
+      console.log("Query that caused error:", query);
+      showError(`GraphQL Error: ${errorMessage}`);
       return null;
     }
-
-    return data.data;
+    
+    return result.data;
   } catch (error) {
-    console.error("GraphQL request failed:", error);
+    console.error("Error fetching data:", error);
+    console.log("Query that caused error:", query);
+    showError(`Failed to fetch data: ${error.message}`);
     return null;
   }
 }
