@@ -26,17 +26,31 @@ function showChart(chartId) {
 // Generate XP chart (SVG bar chart)
 function generateXPChart(transactions) {
   const svg = document.getElementById("xpSvg");
-  svg.innerHTML = "";
-
+  svg.innerHTML = ''; // Clear previous content
+  
+  // Set dimensions and margins
+  const width = svg.clientWidth;
+  const height = svg.clientHeight;
+  const margin = { top: 40, right: 30, bottom: 60, left: 60 };
+  const chartWidth = width - margin.left - margin.right;
+  const chartHeight = height - margin.top - margin.bottom;
+  
+  // Create chart group with transform
+  const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  g.setAttribute("transform", `translate(${margin.left},${margin.top})`);
+  svg.appendChild(g);
+  
+  // Add tooltip element
+  const tooltip = document.createElementNS("http://www.w3.org/2000/svg", "text");
+  tooltip.setAttribute("class", "tooltip");
+  tooltip.setAttribute("visibility", "hidden");
+  svg.appendChild(tooltip);
+  
   if (!transactions || transactions.length === 0) {
     svg.innerHTML =
       '<text x="50%" y="50%" text-anchor="middle" class="text-slate-500 dark:text-slate-400">No XP data available</text>';
     return;
   }
-
-  const width = svg.clientWidth;
-  const height = svg.clientHeight;
-  const padding = { top: 40, right: 30, bottom: 60, left: 60 };
 
   // Sort transactions by date
   const sortedData = [...transactions].sort(
@@ -82,23 +96,23 @@ function generateXPChart(transactions) {
   // Calculate scales
   const maxXP = Math.max(...dataPoints.map((d) => d.amount));
   const barWidth =
-    (width - padding.left - padding.right) / dataPoints.length - 10;
+    (width - margin.left - margin.right) / dataPoints.length - 10;
 
   // Draw axes
   const xAxis = document.createElementNS("http://www.w3.org/2000/svg", "line");
-  xAxis.setAttribute("x1", padding.left);
-  xAxis.setAttribute("y1", height - padding.bottom);
-  xAxis.setAttribute("x2", width - padding.right);
-  xAxis.setAttribute("y2", height - padding.bottom);
+  xAxis.setAttribute("x1", margin.left);
+  xAxis.setAttribute("y1", height - margin.bottom);
+  xAxis.setAttribute("x2", width - margin.right);
+  xAxis.setAttribute("y2", height - margin.bottom);
   xAxis.setAttribute("stroke", "#64748b");
   xAxis.setAttribute("stroke-width", "2");
   svg.appendChild(xAxis);
 
   const yAxis = document.createElementNS("http://www.w3.org/2000/svg", "line");
-  yAxis.setAttribute("x1", padding.left);
-  yAxis.setAttribute("y1", padding.top);
-  yAxis.setAttribute("x2", padding.left);
-  yAxis.setAttribute("y2", height - padding.bottom);
+  yAxis.setAttribute("x1", margin.left);
+  yAxis.setAttribute("y1", margin.top);
+  yAxis.setAttribute("x2", margin.left);
+  yAxis.setAttribute("y2", height - margin.bottom);
   yAxis.setAttribute("stroke", "#64748b");
   yAxis.setAttribute("stroke-width", "2");
   svg.appendChild(yAxis);
@@ -108,15 +122,15 @@ function generateXPChart(transactions) {
   for (let i = 0; i <= gridLines; i++) {
     const yPos =
       height -
-      padding.bottom -
-      (i / gridLines) * (height - padding.top - padding.bottom);
+      margin.bottom -
+      (i / gridLines) * (height - margin.top - margin.bottom);
     const gridLine = document.createElementNS(
       "http://www.w3.org/2000/svg",
       "line"
     );
-    gridLine.setAttribute("x1", padding.left);
+    gridLine.setAttribute("x1", margin.left);
     gridLine.setAttribute("y1", yPos);
-    gridLine.setAttribute("x2", width - padding.right);
+    gridLine.setAttribute("x2", width - margin.right);
     gridLine.setAttribute("y2", yPos);
     gridLine.setAttribute("stroke", "#e2e8f0");
     gridLine.setAttribute("stroke-width", "1");
@@ -126,12 +140,12 @@ function generateXPChart(transactions) {
   // Draw bars and labels
   dataPoints.forEach((point, i) => {
     const x =
-      padding.left +
-      i * ((width - padding.left - padding.right) / dataPoints.length) +
+      margin.left +
+      i * ((width - margin.left - margin.right) / dataPoints.length) +
       5;
     const barHeight =
-      (point.amount / maxXP) * (height - padding.top - padding.bottom);
-    const y = height - padding.bottom - barHeight;
+      (point.amount / maxXP) * (height - margin.top - margin.bottom);
+    const y = height - margin.bottom - barHeight;
 
     // Bar
     const bar = document.createElementNS("http://www.w3.org/2000/svg", "rect");
@@ -197,7 +211,7 @@ function generateXPChart(transactions) {
       "text"
     );
     label.setAttribute("x", x + barWidth / 2);
-    label.setAttribute("y", height - padding.bottom + 20);
+    label.setAttribute("y", height - margin.bottom + 20);
     label.setAttribute("text-anchor", "middle");
     label.setAttribute("font-size", "10");
     label.setAttribute("font-family", "JetBrains Mono, monospace");
@@ -210,13 +224,13 @@ function generateXPChart(transactions) {
   for (let i = 0; i <= gridLines; i++) {
     const yPos =
       height -
-      padding.bottom -
-      (i / gridLines) * (height - padding.top - padding.bottom);
+      margin.bottom -
+      (i / gridLines) * (height - margin.top - margin.bottom);
     const yLabel = document.createElementNS(
       "http://www.w3.org/2000/svg",
       "text"
     );
-    yLabel.setAttribute("x", padding.left - 10);
+    yLabel.setAttribute("x", margin.left - 10);
     yLabel.setAttribute("y", yPos + 5);
     yLabel.setAttribute("text-anchor", "end");
     yLabel.setAttribute("font-size", "10");
