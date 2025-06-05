@@ -72,11 +72,15 @@ async function handleLogin(event) {
   hideError();
   
   // Get form values
-  const username = document.getElementById("username").value;
+  const identifier = document.getElementById("username").value;
   const password = document.getElementById("password").value;
   
+  // Determine if identifier is email or username
+  const isEmail = identifier.includes('@');
+  const authType = isEmail ? 'email' : 'username';
+  
   // Create Basic auth credentials
-  const credentials = btoa(`${username}:${password}`);
+  const credentials = btoa(`${identifier}:${password}`);
   
   try {
     // Show loading state
