@@ -94,6 +94,30 @@ async function loadProfile() {
     } else {
       displayXPInfo([]);
     }
+
+    // Query for skills data
+    const skillsQuery = `
+      query {
+        transaction(
+          where: {
+            type: { _like: "skill_%" }
+          }
+        ) {
+          id
+          type
+          amount
+          createdAt
+          path
+        }
+      }
+    `;
+    const skillsData = await graphqlQuery(skillsQuery);
+    if (skillsData && skillsData.transaction) {
+      processSkillsData(skillsData.transaction);
+    } else {
+      displaySkillsError();
+    }
+
   } catch (error) {
     console.error("Error loading profile:", error);
     showError("Failed to load profile data. Please try again.");
@@ -111,6 +135,116 @@ async function loadProfile() {
         "Data loading error from GraphQL. Please refresh or check query."
       );
     }
+  }
+}
+
+// Process skills data from transactions
+function processSkillsData(skillTransactions) {
+  if (!skillTransactions || skillTransactions.length === 0) {
+    displaySkillsError();
+    return;
+  }
+
+  // Group skills by type and sum their amounts
+  const skillsMap = new Map();
+  
+  skillTransactions.forEach(transaction => {
+    if (transaction.type.startsWith('skill_')) {
+      const skillType = transaction.type;
+      const currentAmount = skillsMap.get(skillType) || 0;
+      skillsMap.set(skillType, currentAmount + transaction.amount);
+    }
+  });
+
+  // Convert to array format expected by renderSkillsOverview
+  const skills = Array.from(skillsMap.entries()).map(([type, amount]) => ({
+    type: type,
+    amount: Math.round(amount) // Round to nearest integer for percentage display
+  }));
+
+  // Create userData object with skills
+  const userData = { skills: skills };
+  
+  // Use the existing renderSkillsOverview function
+  renderSkillsOverview(userData);
+}
+
+// Display error when skills data is not available
+function displaySkillsError() {
+  const skillsContainer = document.getElementById('skillsInfo');
+  if (skillsContainer) {
+    skillsContainer.innerHTML = `
+      <div class="text-center py-8">
+        <i class="fas fa-exclamation-triangle text-3xl text-slate-400 mb-3"></i>
+        <p class="text-slate-500 dark:text-slate-400 text-sm">Skills data unavailable</p>
+      </div>
+    `;
+  }
+}
+
+/**
+ * Renders the skills overview section
+ * @param {Object} userData - The processed user data
+ */
+function renderSkillsOverview(userData) {
+  try {
+    if (!userData || !userData.skills || !userData.skills.length) {
+      throw new Error('Skills data not available');
+    }
+
+    const container = document.getElementById('skillsInfo');
+    if (!container) return;
+
+    // Clear existing content
+    container.innerHTML = '';
+
+    // Find max value for scaling
+    const maxAmount = Math.max(...userData.skills.map(skill => skill.amount));
+
+    // Sort skills by amount in descending order
+    const sortedSkills = [...userData.skills].sort((a, b) => b.amount - a.amount);
+
+    // Define colors for variety
+    const colors = [
+      { bg: 'bg-blue-500', text: 'text-blue-500' },
+      { bg: 'bg-green-500', text: 'text-green-500' },
+      { bg: 'bg-purple-500', text: 'text-purple-500' },
+      { bg: 'bg-yellow-500', text: 'text-yellow-500' },
+      { bg: 'bg-red-500', text: 'text-red-500' },
+      { bg: 'bg-indigo-500', text: 'text-indigo-500' },
+      { bg: 'bg-pink-500', text: 'text-pink-500' },
+      { bg: 'bg-teal-500', text: 'text-teal-500' }
+    ];
+
+    // Create skills container
+    const skillsContainer = document.createElement('div');
+    skillsContainer.className = 'space-y-4';
+
+    // Process and display skills
+    sortedSkills.forEach((skill, index) => {
+      const skillName = skill.type.replace('skill_', '').replace(/_/g, ' ');
+      const percentage = Math.min(skill.amount, 100); // Cap at 100% for display
+      const color = colors[index % colors.length];
+
+      const skillDiv = document.createElement('div');
+      skillDiv.className = 'space-y-2';
+      skillDiv.innerHTML = `
+        <div class="flex justify-between items-center">
+          <span class="text-sm font-medium text-slate-700 dark:text-slate-300 capitalize">${skillName}</span>
+          <span class="text-sm font-bold ${color.text} dark:${color.text}">${percentage}%</span>
+        </div>
+        <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5">
+          <div class="${color.bg} h-2.5 rounded-full transition-all duration-300 ease-in-out" style="width: ${percentage}%"></div>
+        </div>
+      `;
+
+      skillsContainer.appendChild(skillDiv);
+    });
+
+    container.appendChild(skillsContainer);
+  } catch (error) {
+    console.error('Error rendering skills overview:', error);
+    displaySkillsError();
   }
 }
 
