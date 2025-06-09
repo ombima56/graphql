@@ -270,9 +270,16 @@ function generateResultsChart(data) {
     return;
   }
 
-  // SVG dimensions
-  const width = svg.clientWidth;
-  const height = svg.clientHeight;
+  // SVG dimensions - use parent container or fallback to default size
+  const parentElement = svg.parentElement;
+  const width = svg.clientWidth || parentElement?.clientWidth || 400;
+  const height = svg.clientHeight || parentElement?.clientHeight || 300;
+  
+  // Set SVG viewBox to ensure proper scaling
+  svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+  svg.setAttribute('width', '100%');
+  svg.setAttribute('height', '100%');
+  
   const centerX = width / 2;
   const centerY = height / 2;
   const radius = Math.min(width, height) / 3;
@@ -284,24 +291,54 @@ function generateResultsChart(data) {
   );
   chartGroup.setAttribute("transform", `translate(${centerX}, ${centerY})`);
 
-  // Calculate angles for each segment
-  const passedAngle = (passedCount / totalProjects) * 2 * Math.PI;
-  const failedAngle = (failedCount / totalProjects) * 2 * Math.PI;
-  const inProgressAngle = (inProgressCount / totalProjects) * 2 * Math.PI;
+  // Create segments data array
+  const segments = [];
+  if (passedCount > 0) {
+    segments.push({
+      count: passedCount,
+      color: "#10b981",
+      label: "PASS"
+    });
+  }
+  if (failedCount > 0) {
+    segments.push({
+      count: failedCount,
+      color: "#ef4444",
+      label: "FAIL"
+    });
+  }
+  if (inProgressCount > 0) {
+    segments.push({
+      count: inProgressCount,
+      color: "#f59e0b",
+      label: "IN PROGRESS"
+    });
+  }
+
+  // Calculate angles ensuring they sum to exactly 2π
+  let totalAngle = 0;
+  segments.forEach((segment, index) => {
+    if (index === segments.length - 1) {
+      segment.angle = 2 * Math.PI - totalAngle;
+    } else {
+      segment.angle = (segment.count / totalProjects) * 2 * Math.PI;
+      totalAngle += segment.angle;
+    }
+  });
 
   let currentAngle = -Math.PI / 2; // Start at the top
 
-  // Draw passed segment (green)
-  if (passedCount > 0) {
+  // Draw segments
+  segments.forEach(segment => {
     const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    const endAngle = currentAngle + passedAngle;
+    const endAngle = currentAngle + segment.angle;
 
     const x1 = radius * Math.cos(currentAngle);
     const y1 = radius * Math.sin(currentAngle);
     const x2 = radius * Math.cos(endAngle);
     const y2 = radius * Math.sin(endAngle);
 
-    const largeArcFlag = passedAngle > Math.PI ? 1 : 0;
+    const largeArcFlag = segment.angle > Math.PI ? 1 : 0;
 
     const pathData = [
       `M 0 0`,
@@ -311,67 +348,13 @@ function generateResultsChart(data) {
     ].join(" ");
 
     path.setAttribute("d", pathData);
-    path.setAttribute("fill", "#10b981");
+    path.setAttribute("fill", segment.color);
     path.setAttribute("stroke", "white");
     path.setAttribute("stroke-width", "2");
     chartGroup.appendChild(path);
 
-    currentAngle += passedAngle;
-  }
-
-  // Draw failed segment (red)
-  if (failedCount > 0) {
-    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    const endAngle = currentAngle + failedAngle;
-
-    const x1 = radius * Math.cos(currentAngle);
-    const y1 = radius * Math.sin(currentAngle);
-    const x2 = radius * Math.cos(endAngle);
-    const y2 = radius * Math.sin(endAngle);
-
-    const largeArcFlag = failedAngle > Math.PI ? 1 : 0;
-
-    const pathData = [
-      `M 0 0`,
-      `L ${x1} ${y1}`,
-      `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`,
-      `Z`,
-    ].join(" ");
-
-    path.setAttribute("d", pathData);
-    path.setAttribute("fill", "#ef4444");
-    path.setAttribute("stroke", "white");
-    path.setAttribute("stroke-width", "2");
-    chartGroup.appendChild(path);
-
-    currentAngle += failedAngle;
-  }
-
-  // Draw in progress segment (yellow)
-  if (inProgressCount > 0) {
-    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    const endAngle = currentAngle + inProgressAngle;
-
-    const x1 = radius * Math.cos(currentAngle);
-    const y1 = radius * Math.sin(currentAngle);
-    const x2 = radius * Math.cos(endAngle);
-    const y2 = radius * Math.sin(endAngle);
-
-    const largeArcFlag = inProgressAngle > Math.PI ? 1 : 0;
-
-    const pathData = [
-      `M 0 0`,
-      `L ${x1} ${y1}`,
-      `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`,
-      `Z`,
-    ].join(" ");
-
-    path.setAttribute("d", pathData);
-    path.setAttribute("fill", "#f59e0b");
-    path.setAttribute("stroke", "white");
-    path.setAttribute("stroke-width", "2");
-    chartGroup.appendChild(path);
-  }
+    currentAngle += segment.angle;
+  });
 
   svg.appendChild(chartGroup);
 
@@ -383,82 +366,88 @@ function generateResultsChart(data) {
   legendGroup.setAttribute("transform", `translate(${width - 120}, 30)`);
 
   // Passed legend item
-  const passRect = document.createElementNS(
-    "http://www.w3.org/2000/svg",
-    "rect"
-  );
-  passRect.setAttribute("x", "0");
-  passRect.setAttribute("y", "0");
-  passRect.setAttribute("width", "15");
-  passRect.setAttribute("height", "15");
-  passRect.setAttribute("fill", "#10b981");
-  legendGroup.appendChild(passRect);
+  if (passedCount > 0) {
+    const passRect = document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "rect"
+    );
+    passRect.setAttribute("x", "0");
+    passRect.setAttribute("y", "0");
+    passRect.setAttribute("width", "15");
+    passRect.setAttribute("height", "15");
+    passRect.setAttribute("fill", "#10b981");
+    legendGroup.appendChild(passRect);
 
-  const passText = document.createElementNS(
-    "http://www.w3.org/2000/svg",
-    "text"
-  );
-  passText.setAttribute("x", "25");
-  passText.setAttribute("y", "12");
-  passText.setAttribute("font-size", "12");
-  passText.setAttribute("font-family", "JetBrains Mono, monospace");
-  passText.setAttribute("fill", "#64748b");
-  passText.textContent = `PASS (${Math.round(
-    (passedCount / totalProjects) * 100
-  )}%)`;
-  legendGroup.appendChild(passText);
+    const passText = document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "text"
+    );
+    passText.setAttribute("x", "25");
+    passText.setAttribute("y", "12");
+    passText.setAttribute("font-size", "12");
+    passText.setAttribute("font-family", "JetBrains Mono, monospace");
+    passText.setAttribute("fill", "#64748b");
+    passText.textContent = `PASS (${Math.round(
+      (passedCount / totalProjects) * 100
+    )}%)`;
+    legendGroup.appendChild(passText);
+  }
 
   // Failed legend item
-  const failRect = document.createElementNS(
-    "http://www.w3.org/2000/svg",
-    "rect"
-  );
-  failRect.setAttribute("x", "0");
-  failRect.setAttribute("y", "25");
-  failRect.setAttribute("width", "15");
-  failRect.setAttribute("height", "15");
-  failRect.setAttribute("fill", "#ef4444");
-  legendGroup.appendChild(failRect);
+  if (failedCount > 0) {
+    const failRect = document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "rect"
+    );
+    failRect.setAttribute("x", "0");
+    failRect.setAttribute("y", "25");
+    failRect.setAttribute("width", "15");
+    failRect.setAttribute("height", "15");
+    failRect.setAttribute("fill", "#ef4444");
+    legendGroup.appendChild(failRect);
 
-  const failText = document.createElementNS(
-    "http://www.w3.org/2000/svg",
-    "text"
-  );
-  failText.setAttribute("x", "25");
-  failText.setAttribute("y", "37");
-  failText.setAttribute("font-size", "12");
-  failText.setAttribute("font-family", "JetBrains Mono, monospace");
-  failText.setAttribute("fill", "#64748b");
-  failText.textContent = `FAIL (${Math.round(
-    (failedCount / totalProjects) * 100
-  )}%)`;
-  legendGroup.appendChild(failText);
+    const failText = document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "text"
+    );
+    failText.setAttribute("x", "25");
+    failText.setAttribute("y", "37");
+    failText.setAttribute("font-size", "12");
+    failText.setAttribute("font-family", "JetBrains Mono, monospace");
+    failText.setAttribute("fill", "#64748b");
+    failText.textContent = `FAIL (${Math.round(
+      (failedCount / totalProjects) * 100
+    )}%)`;
+    legendGroup.appendChild(failText);
+  }
 
   // In Progress legend item
-  const progressRect = document.createElementNS(
-    "http://www.w3.org/2000/svg",
-    "rect"
-  );
-  progressRect.setAttribute("x", "0");
-  progressRect.setAttribute("y", "50");
-  progressRect.setAttribute("width", "15");
-  progressRect.setAttribute("height", "15");
-  progressRect.setAttribute("fill", "#f59e0b");
-  legendGroup.appendChild(progressRect);
+  if (inProgressCount > 0) {
+    const progressRect = document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "rect"
+    );
+    progressRect.setAttribute("x", "0");
+    progressRect.setAttribute("y", "50");
+    progressRect.setAttribute("width", "15");
+    progressRect.setAttribute("height", "15");
+    progressRect.setAttribute("fill", "#f59e0b");
+    legendGroup.appendChild(progressRect);
 
-  const progressText = document.createElementNS(
-    "http://www.w3.org/2000/svg",
-    "text"
-  );
-  progressText.setAttribute("x", "25");
-  progressText.setAttribute("y", "62");
-  progressText.setAttribute("font-size", "12");
-  progressText.setAttribute("font-family", "JetBrains Mono, monospace");
-  progressText.setAttribute("fill", "#64748b");
-  progressText.textContent = `IN PROGRESS (${Math.round(
-    (inProgressCount / totalProjects) * 100
-  )}%)`;
-  legendGroup.appendChild(progressText);
+    const progressText = document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "text"
+    );
+    progressText.setAttribute("x", "25");
+    progressText.setAttribute("y", "62");
+    progressText.setAttribute("font-size", "12");
+    progressText.setAttribute("font-family", "JetBrains Mono, monospace");
+    progressText.setAttribute("fill", "#64748b");
+    progressText.textContent = `IN PROGRESS (${Math.round(
+      (inProgressCount / totalProjects) * 100
+    )}%)`;
+    legendGroup.appendChild(progressText);
+  }
 
   svg.appendChild(legendGroup);
 

@@ -119,6 +119,9 @@ async function handleLogin(event) {
       } else {
         errorDiv.querySelector("p:last-child").textContent = `Login failed: ${response.statusText}`;
       }
+
+      setTimeout(hideError, 5000);
+
     }
   } catch (error) {
     console.error("Login error:", error);
@@ -133,6 +136,8 @@ async function handleLogin(event) {
     submitButton.textContent = "LOG IN";
     submitButton.disabled = false;
   }
+
+  setTimeout(hideError, 5000);
 }
 
 // Hide error message
