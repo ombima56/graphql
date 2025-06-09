@@ -219,10 +219,6 @@ function renderSkillsOverview(userData) {
       { bg: 'bg-teal-500', text: 'text-teal-500' }
     ];
 
-    // Create skills container
-
-    console.log('sorted skills:', sortedSkills);
-
     // Process and display skills
     sortedSkills.forEach((skill, index) => {
       const skillName = skill.type.replace('skill_', '').replace(/_/g, ' ');
