@@ -220,8 +220,8 @@ function renderSkillsOverview(userData) {
     ];
 
     // Create skills container
-    const skillsContainer = document.createElement('div');
-    skillsContainer.className = 'space-y-4';
+
+    console.log('sorted skills:', sortedSkills);
 
     // Process and display skills
     sortedSkills.forEach((skill, index) => {
@@ -241,10 +241,9 @@ function renderSkillsOverview(userData) {
         </div>
       `;
 
-      skillsContainer.appendChild(skillDiv);
+      container.appendChild(skillDiv);
     });
 
-    container.appendChild(skillsContainer);
   } catch (error) {
     console.error('Error rendering skills overview:', error);
     displaySkillsError();
