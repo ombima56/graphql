@@ -353,15 +353,17 @@
 
       </main>
 
-      <footer
-        class="mt-12 text-center text-sm text-slate-500 dark:text-slate-400"
-      >
+      <footer class="mt-12 text-center text-sm text-slate-500 dark:text-slate-400">
         <p class="flex items-center justify-center gap-2">
           <i class="fas fa-code"></i>
-          <span>GraphQL Profile Viewer &copy; 2025</span>
+          <span>GraphQL Profile Viewer &copy; <span id="currentYear"></span></span>
         </p>
-      </footer>
+      </footer>      
     </div>
+
+    <script>
+      document.getElementById("currentYear").textContent = new Date().getFullYear();
+    </script>    
 
     <script src="js/utils.js"></script>
     <script src="js/auth.js"></script>
