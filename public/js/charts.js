@@ -241,7 +241,7 @@ function generateXPChart(transactions) {
   }
 }
 
-// Generate results chart (SVG pie chart) - FIXED VERSION
+// Generate results chart (SVG pie chart)
 function generateResultsChart(data) {
   const svg = document.getElementById("resultsSvg");
   svg.innerHTML = "";
@@ -270,9 +270,16 @@ function generateResultsChart(data) {
     return;
   }
 
-  // SVG dimensions
-  const width = svg.clientWidth;
-  const height = svg.clientHeight;
+  // SVG dimensions - use parent container or fallback to default size
+  const parentElement = svg.parentElement;
+  const width = svg.clientWidth || parentElement?.clientWidth || 400;
+  const height = svg.clientHeight || parentElement?.clientHeight || 300;
+  
+  // Set SVG viewBox to ensure proper scaling
+  svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+  svg.setAttribute('width', '100%');
+  svg.setAttribute('height', '100%');
+  
   const centerX = width / 2;
   const centerY = height / 2;
   const radius = Math.min(width, height) / 3;
@@ -319,7 +326,7 @@ function generateResultsChart(data) {
     }
   });
 
-  let currentAngle = -Math.PI / 2;
+  let currentAngle = -Math.PI / 2; // Start at the top
 
   // Draw segments
   segments.forEach(segment => {
