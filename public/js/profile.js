@@ -281,7 +281,6 @@ function displayUserInfo(user) {
 
   let html = "";
 
-  // Combine first and last name
   const fullName = [user.firstName, user.lastName].filter(Boolean).join(" ");
 
   // Standard fields to display with enhanced styling
