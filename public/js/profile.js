@@ -100,8 +100,11 @@ async function loadProfile() {
       query {
         transaction(
           where: {
-            type: { _like: "skill_%" }
+            type: { _like: "skill_%" },
           }
+          distinct_on: [type]
+          order_by:[{type: asc}, {amount: desc}]
+  
         ) {
           id
           type
